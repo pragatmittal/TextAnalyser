@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Advanced Text Analyzer - Analyze readability, statistics, and grade levels of your text">
+    <title>Advanced Text Analyzer</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="app-header">
+        <div class="container">
+            <h1 class="app-title">Advanced Text Analyzer</h1>
+            <p class="app-subtitle">Analyze readability, statistics, and grade levels of your text</p>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <div class="container">
+            <section class="input-section" role="region" aria-labelledby="input-heading">
+                <h2 id="input-heading" class="section-title">Text Input</h2>
+                <div class="input-wrapper">
+                    <textarea 
+                        id="text-input" 
+                        class="text-input"
+                        placeholder="Enter your text here for analysis..."
+                        rows="10"
+                        cols="50"
+                        maxlength="10000"
+                        aria-label="Text input for analysis"
+                        aria-describedby="char-count input-help">
+                    </textarea>
+                    <div class="input-meta">
+                        <span id="char-count" class="char-count" aria-live="polite">0 / 10,000 characters</span>
+                        <span id="input-help" class="input-help">Maximum 10,000 characters allowed</span>
+                    </div>
+                </div>
+
+                <div class="control-buttons">
+                    <button 
+                        id="analyze-btn" 
+                        class="btn btn-primary"
+                        aria-label="Analyze the entered text"
+                        disabled>
+                        <span class="btn-icon">🔍</span>
+                        Analyze Text
+                    </button>
+                    <button 
+                        id="clear-btn" 
+                        class="btn btn-secondary"
+                        aria-label="Clear all text and results">
+                        <span class="btn-icon">🗑️</span>
+                        Clear
+                    </button>
+                    <button 
+                        id="export-btn" 
+                        class="btn btn-secondary"
+                        aria-label="Export analysis results"
+                        disabled>
+                        <span class="btn-icon">📊</span>
+                        Export
+                    </button>
+                    <button 
+                        id="copy-btn" 
+                        class="btn btn-secondary"
+                        aria-label="Copy analysis results to clipboard"
+                        disabled>
+                        <span class="btn-icon">📋</span>
+                        Copy Results
+                    </button>
+                </div>
+
+                <div id="progress-container" class="progress-container" aria-hidden="true">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+                    </div>
+                    <span id="progress-text" class="progress-text">Analyzing text...</span>
+                </div>
+            </section>
+
+            <section class="results-section" role="region" aria-labelledby="results-heading">
+                <h2 id="results-heading" class="section-title">Analysis Results</h2>
+                
+                <div class="results-grid">
+                    <article class="statistics-panel panel" role="article" aria-labelledby="stats-heading">
+                        <h3 id="stats-heading" class="panel-title">
+                            <span class="panel-icon">📊</span>
+                            Text Statistics
+                        </h3>
+                        <div class="panel-content">
+                            <div class="stat-item">
+                                <span class="stat-label">Words:</span>
+                                <span id="word-count" class="stat-value">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Characters:</span>
+                                <span id="char-count-result" class="stat-value">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Sentences:</span>
+                                <span id="sentence-count" class="stat-value">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Paragraphs:</span>
+                                <span id="paragraph-count" class="stat-value">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Average Words per Sentence:</span>
+                                <span id="avg-words-sentence" class="stat-value">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Average Syllables per Word:</span>
+                                <span id="avg-syllables-word" class="stat-value">0</span>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="readability-panel panel" role="article" aria-labelledby="readability-heading">
+                        <h3 id="readability-heading" class="panel-title">
+                            <span class="panel-icon">📖</span>
+                            Readability Scores
+                        </h3>
+                        <div class="panel-content">
+                            <div class="readability-score">
+                                <div class="score-header">
+                                    <span class="score-name">Flesch Reading Ease</span>
+                                    <span id="flesch-score" class="score-value" data-score="0">0</span>
+                                </div>
+                                <div class="score-bar">
+                                    <div id="flesch-bar" class="score-fill" style="width: 0%"></div>
+                                </div>
+                                <span id="flesch-interpretation" class="score-interpretation">No analysis yet</span>
+                            </div>
+                            
+                            <div class="readability-score">
+                                <div class="score-header">
+                                    <span class="score-name">Flesch-Kincaid Grade</span>
+                                    <span id="fk-grade" class="score-value" data-score="0">0</span>
+                                </div>
+                                <div class="score-bar">
+                                    <div id="fk-bar" class="score-fill" style="width: 0%"></div>
+                                </div>
+                                <span id="fk-interpretation" class="score-interpretation">No analysis yet</span>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="grade-panel panel" role="article" aria-labelledby="grade-heading">
+                        <h3 id="grade-heading" class="panel-title">
+                            <span class="panel-icon">🎓</span>
+                            Grade Level Analysis
+                        </h3>
+                        <div class="panel-content">
+                            <div class="grade-indicator">
+                                <div id="grade-level" class="grade-level-display" data-level="none">
+                                    <span class="grade-number">-</span>
+                                    <span class="grade-label">No Analysis</span>
+                                </div>
+                                <div class="grade-description">
+                                    <p id="grade-explanation">Enter text to see grade level analysis</p>
+                                </div>
+                            </div>
+                            <div class="reading-time">
+                                <h4 class="reading-time-title">Estimated Reading Time</h4>
+                                <div class="reading-speeds">
+                                    <div class="speed-item">
+                                        <span class="speed-label">Slow (150 WPM):</span>
+                                        <span id="reading-time-slow" class="speed-value">0 min</span>
+                                    </div>
+                                    <div class="speed-item">
+                                        <span class="speed-label">Average (250 WPM):</span>
+                                        <span id="reading-time-avg" class="speed-value">0 min</span>
+                                    </div>
+                                    <div class="speed-item">
+                                        <span class="speed-label">Fast (400 WPM):</span>
+                                        <span id="reading-time-fast" class="speed-value">0 min</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="insights-panel panel" role="article" aria-labelledby="insights-heading">
+                        <h3 id="insights-heading" class="panel-title">
+                            <span class="panel-icon">💡</span>
+                            Key Insights
+                        </h3>
+                        <div class="panel-content">
+                            <div id="insights-content" class="insights-content">
+                                <p class="no-insights">Analyze text to see insights and recommendations</p>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <div class="container">
+            <p>&copy; 2024 Advanced Text Analyzer. Built with modern web technologies.</p>
+        </div>
+    </footer>
+
+    <!-- Toast notifications -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <!-- Scripts -->
+    <script src="scripts/config.js"></script>
+    <script src="scripts/utils.js"></script>
+    <script src="scripts/analysis.js"></script>
+    <script src="scripts/ui.js"></script>
+    <script src="scripts/main.js"></script>
+</body>
+</html>
