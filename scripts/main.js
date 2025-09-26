@@ -44,6 +44,9 @@
             // Initialize UI components
             initializeUI();
             
+            // Initialize advanced input processing modules
+            initializeInputProcessingModules();
+            
             // Setup analytics if enabled
             if (App.features.analytics) {
                 initializeAnalytics();
@@ -132,6 +135,178 @@
         document.documentElement.setAttribute('data-theme', savedPreferences.theme);
         
         console.log('📋 User preferences loaded:', savedPreferences);
+    };
+    
+    // Advanced input processing modules initialization using function expression
+    const initializeInputProcessingModules = function() {
+        console.log('🔧 Initializing Advanced Input Processing System...');
+        
+        try {
+            // Initialize TextPreprocessor module
+            if (typeof TextPreprocessor !== 'undefined') {
+                TextPreprocessor.init();
+                console.log('✅ TextPreprocessor module initialized');
+            } else {
+                console.warn('⚠️ TextPreprocessor module not found');
+            }
+            
+            // Initialize DebouncedAnalyzer module
+            if (typeof DebouncedAnalyzer !== 'undefined') {
+                DebouncedAnalyzer.init();
+                console.log('✅ DebouncedAnalyzer module initialized');
+            } else {
+                console.warn('⚠️ DebouncedAnalyzer module not found');
+            }
+            
+            // Initialize InputProcessor module (should be last as it may depend on others)
+            if (typeof InputProcessor !== 'undefined') {
+                InputProcessor.init();
+                console.log('✅ InputProcessor module initialized');
+                
+                // Setup event listeners for the main text input
+                setupAdvancedInputHandling();
+            } else {
+                console.warn('⚠️ InputProcessor module not found');
+            }
+            
+            console.log('🚀 Advanced Input Processing System fully initialized');
+            
+        } catch (error) {
+            console.error('❌ Failed to initialize input processing modules:', error);
+            ErrorUtils.logError(error, { context: 'input_processing_initialization' });
+        }
+    };
+    
+    // Setup advanced input handling using arrow function
+    const setupAdvancedInputHandling = () => {
+        const textInput = document.getElementById('text-input');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        
+        if (!textInput) {
+            console.warn('⚠️ Text input element not found');
+            return;
+        }
+        
+        // Setup debounced input processing
+        const debouncedProcessor = DebouncedAnalyzer.createProcessor(textInput, {
+            debounceDelay: 500,
+            enablePreprocessing: true,
+            enableValidation: true,
+            onProcess: (processedText, metadata) => {
+                // Update UI with processed text information
+                updateInputMetadata(metadata);
+                
+                // Enable/disable analyze button based on validation
+                if (analyzeBtn) {
+                    analyzeBtn.disabled = !metadata.isValid;
+                }
+                
+                // Auto-save if feature is enabled
+                if (App.features.persistence && metadata.isValid) {
+                    saveSessionData();
+                }
+            },
+            onError: (error) => {
+                console.error('Input processing error:', error);
+                showInputError(error.message);
+            }
+        });
+        
+        // Setup input validation with visual feedback
+        InputProcessor.attachTo(textInput, {
+            enableRealTimeValidation: true,
+            showValidationFeedback: true,
+            preprocessText: true,
+            onValidationChange: (isValid, errors) => {
+                updateValidationUI(isValid, errors);
+            }
+        });
+        
+        console.log('🎯 Advanced input handling setup complete');
+    };
+    
+    // Update input metadata display using arrow function
+    const updateInputMetadata = (metadata) => {
+        const { wordCount, charCount, isValid, estimatedReadingTime, validationErrors } = metadata;
+        
+        // Update character count display
+        const charCountElement = document.getElementById('char-count');
+        if (charCountElement) {
+            const maxChars = CONFIG.validation.maxCharacters;
+            charCountElement.textContent = `${charCount} / ${maxChars.toLocaleString()} characters`;
+            charCountElement.classList.toggle('near-limit', charCount > maxChars * 0.9);
+            charCountElement.classList.toggle('over-limit', charCount > maxChars);
+        }
+        
+        // Update word count if element exists
+        const wordCountElement = document.getElementById('word-count');
+        if (wordCountElement) {
+            wordCountElement.textContent = `${wordCount.toLocaleString()} words`;
+        }
+        
+        // Update reading time if element exists
+        const readingTimeElement = document.getElementById('reading-time');
+        if (readingTimeElement && estimatedReadingTime) {
+            readingTimeElement.textContent = `~${estimatedReadingTime} min read`;
+        }
+    };
+    
+    // Update validation UI using arrow function
+    const updateValidationUI = (isValid, errors) => {
+        const inputWrapper = document.querySelector('.input-wrapper');
+        const textInput = document.getElementById('text-input');
+        
+        if (!inputWrapper || !textInput) return;
+        
+        // Apply validation classes
+        inputWrapper.classList.toggle('valid', isValid);
+        inputWrapper.classList.toggle('invalid', !isValid);
+        textInput.classList.toggle('valid', isValid);
+        textInput.classList.toggle('invalid', !isValid);
+        
+        // Show/hide validation errors
+        let errorContainer = document.getElementById('validation-errors');
+        
+        if (errors && errors.length > 0) {
+            if (!errorContainer) {
+                errorContainer = document.createElement('div');
+                errorContainer.id = 'validation-errors';
+                errorContainer.className = 'validation-errors';
+                inputWrapper.appendChild(errorContainer);
+            }
+            
+            errorContainer.innerHTML = errors.map(error => 
+                `<span class="validation-error">${error}</span>`
+            ).join('');
+            errorContainer.style.display = 'block';
+        } else if (errorContainer) {
+            errorContainer.style.display = 'none';
+        }
+    };
+    
+    // Show input error using arrow function
+    const showInputError = (message) => {
+        // Create or update error notification
+        const errorNotification = document.createElement('div');
+        errorNotification.className = 'error-notification';
+        errorNotification.innerHTML = `
+            <span class="error-icon">⚠️</span>
+            <span class="error-message">${message}</span>
+            <button class="error-close" onclick="this.parentElement.remove()">×</button>
+        `;
+        
+        // Insert at the top of the main container
+        const mainContainer = document.querySelector('.app-main .container');
+        if (mainContainer) {
+            mainContainer.insertBefore(errorNotification, mainContainer.firstChild);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (errorNotification.parentElement) {
+                    errorNotification.remove();
+                }
+            }, 5000);
+        }
     };
     
     // Analytics initialization using arrow function

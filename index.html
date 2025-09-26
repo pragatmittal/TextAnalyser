@@ -35,6 +35,8 @@
                     </textarea>
                     <div class="input-meta">
                         <span id="char-count" class="char-count" aria-live="polite">0 / 10,000 characters</span>
+                        <span id="word-count" class="word-count" aria-live="polite">0 words</span>
+                        <span id="reading-time" class="reading-time" aria-live="polite"></span>
                         <span id="input-help" class="input-help">Maximum 10,000 characters allowed</span>
                     </div>
                 </div>
@@ -211,6 +213,9 @@
     <!-- Scripts -->
     <script src="scripts/config.js"></script>
     <script src="scripts/utils.js"></script>
+    <script src="scripts/textPreprocessor.js"></script>
+    <script src="scripts/inputProcessor.js"></script>
+    <script src="scripts/debouncedAnalyzer.js"></script>
     <script src="scripts/analysis.js"></script>
     <script src="scripts/ui.js"></script>
     <script src="scripts/main.js"></script>
