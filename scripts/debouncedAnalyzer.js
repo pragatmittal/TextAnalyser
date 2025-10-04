@@ -1,632 +1,246 @@
 /**
- * Advanced Text Analyzer - Debounced Analysis System
- * Prevents system overload with intelligent analysis throttling and queuing
- * Uses function expressions and advanced debouncing techniques
+ * Debounced Analyzer Module
+ * Handles real-time text analysis with debouncing and performance optimization
+ * Uses function expressions and arrow functions as specified
  */
 
-// Self-invoking function for debounced analysis module (IIFE)
-const DebouncedAnalyzer = (function() {
+const debouncedAnalyzer = (function() {
     'use strict';
     
-    // Analysis system state using object literal with destructuring support
-    const analysisState = {
-        pendingAnalyses: new Map(),
-        activeAnalyses: new Map(),
-        analysisQueue: [],
-        performanceMetrics: {
-            totalAnalyses: 0,
-            averageAnalysisTime: 0,
-            queueProcessingTime: 0,
-            throttledRequests: 0,
-            lastAnalysisTimestamp: 0
-        },
-        systemLoad: {
-            cpuUsage: 0,
-            memoryUsage: 0,
-            activeRequests: 0,
-            maxConcurrentAnalyses: 3
+    // Private state variables
+    let isAnalyzing = false;
+    let analysisQueue = [];
+    let lastAnalysisTime = 0;
+    let currentAnalysisId = null;
+    
+    /**
+     * Main analysis function using function expression
+     * @param {string} text - Text to analyze
+     * @param {string} analysisId - Unique identifier for this analysis
+     */
+    const performAnalysis = function(text, analysisId) {
+        // Check if this analysis is still relevant
+        if (analysisId !== currentAnalysisId) {
+            return; // Skip outdated analysis
+        }
+        
+        isAnalyzing = true;
+        showLoadingState();
+        
+        try {
+            // Perform comprehensive text analysis
+            const results = statisticsEngine.getComprehensiveStatistics(text);
+            
+            // Check if analysis is still current before updating UI
+            if (analysisId === currentAnalysisId && window.ui) {
+                window.ui.updateResults(results);
+                hideLoadingState();
+                utils.showMessage('Analysis completed successfully', 'success', 2000);
+            }
+        } catch (error) {
+            console.error('Analysis error:', error);
+            if (analysisId === currentAnalysisId) {
+                hideLoadingState();
+                utils.showMessage('Analysis failed. Please try again.', 'error', 3000);
+            }
+        } finally {
+            if (analysisId === currentAnalysisId) {
+                isAnalyzing = false;
+            }
         }
     };
     
-    // Configuration destructuring from CONFIG object
-    const {
-        animations: { delays },
-        validation: { minWords, maxCharacters },
-        messages: { errors, info }
-    } = CONFIG;
+    /**
+     * Debounced analysis function using function expression
+     */
+    const debouncedAnalysis = utils.debounce(function(text, analysisId) {
+        // Only proceed if this is the most recent analysis request
+        if (analysisId === currentAnalysisId) {
+            performAnalysis(text, analysisId);
+        }
+    }, config.processing.debounceDelay);
     
-    // Advanced debouncing with adaptive delays using function expression
-    const createAdaptiveDebounce = function(func, baseDelay, options = {}) {
-        const {
-            maxDelay = baseDelay * 5,
-            minDelay = baseDelay / 2,
-            loadFactor = true,
-            exponentialBackoff = false
-        } = options;
+    /**
+     * Show loading state using arrow function
+     */
+    const showLoadingState = () => {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const statusElement = document.getElementById('analysis-status');
         
-        let timeoutId;
-        let lastCallTime = 0;
-        let consecutiveCalls = 0;
+        if (loadingOverlay) {
+            loadingOverlay.classList.add('active');
+            loadingOverlay.setAttribute('aria-hidden', 'false');
+        }
         
-        return function adaptiveDebouncedFunction(...args) {
-            const now = performance.now();
-            const timeSinceLastCall = now - lastCallTime;
-            
-            // Adaptive delay calculation
-            let currentDelay = baseDelay;
-            
-            if (exponentialBackoff && consecutiveCalls > 0) {
-                currentDelay = Math.min(baseDelay * Math.pow(1.5, consecutiveCalls), maxDelay);
-            }
-            
-            if (loadFactor) {
-                // Adjust delay based on system load
-                const loadMultiplier = 1 + (analysisState.systemLoad.activeRequests * 0.2);
-                currentDelay = Math.min(currentDelay * loadMultiplier, maxDelay);
-            }
-            
-            // Fast track for very delayed calls
-            if (timeSinceLastCall > maxDelay) {
-                consecutiveCalls = 0;
-                currentDelay = minDelay;
-            } else {
-                consecutiveCalls++;
-            }
-            
-            lastCallTime = now;
-            
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => {
-                consecutiveCalls = 0;
-                func.apply(this, args);
-            }, currentDelay);
-            
-            return timeoutId;
-        };
+        if (statusElement) {
+            statusElement.textContent = 'Analyzing text...';
+            statusElement.style.color = 'blue';
+        }
     };
     
-    // Smart throttling with system load awareness using arrow functions
-    const createSmartThrottle = (func, interval, options = {}) => {
-        const {
-            maxExecutionsPerSecond = 5,
-            backPressureThreshold = 10,
-            adaptToLoad = true
-        } = options;
+    /**
+     * Hide loading state using arrow function
+     */
+    const hideLoadingState = () => {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const statusElement = document.getElementById('analysis-status');
         
-        let lastExecution = 0;
-        let executionCount = 0;
-        let intervalStart = performance.now();
+        if (loadingOverlay) {
+            loadingOverlay.classList.remove('active');
+            loadingOverlay.setAttribute('aria-hidden', 'true');
+        }
         
-        return (...args) => {
-            const now = performance.now();
-            
-            // Reset counter every second
-            if (now - intervalStart > 1000) {
-                executionCount = 0;
-                intervalStart = now;
-            }
-            
-            // Check rate limiting
-            if (executionCount >= maxExecutionsPerSecond) {
-                analysisState.performanceMetrics.throttledRequests++;
-                console.warn('⚠️ Analysis throttled due to rate limit');
-                return Promise.reject(new Error('Analysis rate limit exceeded'));
-            }
-            
-            // Check system load
-            if (adaptToLoad && analysisState.systemLoad.activeRequests > backPressureThreshold) {
-                analysisState.performanceMetrics.throttledRequests++;
-                console.warn('⚠️ Analysis throttled due to system load');
-                return Promise.reject(new Error('System overload - analysis deferred'));
-            }
-            
-            // Apply throttling interval
-            const timeSinceLastExecution = now - lastExecution;
-            if (timeSinceLastExecution < interval) {
-                return Promise.reject(new Error('Analysis throttled - too frequent'));
-            }
-            
-            lastExecution = now;
-            executionCount++;
-            
-            return func.apply(this, args);
-        };
+        if (statusElement) {
+            statusElement.textContent = 'Analysis complete';
+            statusElement.style.color = 'green';
+        }
     };
     
-    // Priority queue implementation using function expression
-    const createPriorityQueue = function() {
-        const queue = [];
-        
-        return {
-            enqueue: (item, priority = 0) => {
-                const queueItem = { item, priority, timestamp: performance.now() };
-                
-                // Insert based on priority (higher number = higher priority)
-                let insertIndex = 0;
-                for (let i = 0; i < queue.length; i++) {
-                    if (queue[i].priority < priority) {
-                        insertIndex = i;
-                        break;
-                    }
-                    insertIndex = i + 1;
+    /**
+     * Generate unique analysis ID
+     * @returns {string} Unique identifier
+     */
+    const generateAnalysisId = function() {
+        return `analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    };
+    
+    /**
+     * Analyze text with debouncing and queue management
+     * @param {string} text - Text to analyze
+     * @returns {Promise} Promise that resolves when analysis is complete
+     */
+    const analyzeText = function(text) {
+        return new Promise((resolve, reject) => {
+            // Validate input
+            if (!text || typeof text !== 'string' || text.trim().length === 0) {
+                reject(new Error('Invalid or empty text input'));
+                return;
+            }
+            
+            // Generate unique ID for this analysis
+            const analysisId = generateAnalysisId();
+            currentAnalysisId = analysisId;
+            
+            // Clear any pending analysis
+            analysisQueue = [];
+            
+            // Add to queue
+            analysisQueue.push({ text, analysisId, resolve, reject });
+            
+            // Start debounced analysis
+            debouncedAnalysis(text, analysisId);
+            
+            // Set up timeout for analysis
+            setTimeout(() => {
+                if (analysisId === currentAnalysisId && isAnalyzing) {
+                    currentAnalysisId = null;
+                    reject(new Error('Analysis timeout'));
                 }
-                
-                queue.splice(insertIndex, 0, queueItem);
-                return queueItem;
-            },
-            
-            dequeue: () => {
-                return queue.shift()?.item;
-            },
-            
-            peek: () => {
-                return queue[0]?.item;
-            },
-            
-            size: () => queue.length,
-            
-            clear: () => {
-                queue.length = 0;
-            },
-            
-            // Remove stale items (older than 30 seconds)
-            cleanup: () => {
-                const cutoff = performance.now() - 30000;
-                const originalLength = queue.length;
-                
-                for (let i = queue.length - 1; i >= 0; i--) {
-                    if (queue[i].timestamp < cutoff) {
-                        queue.splice(i, 1);
-                    }
-                }
-                
-                if (queue.length !== originalLength) {
-                    console.log(`🧹 Cleaned ${originalLength - queue.length} stale analysis requests`);
-                }
-            }
-        };
+            }, 10000); // 10 second timeout
+        });
     };
     
-    // Analysis request queue with priority support
-    const analysisQueue = createPriorityQueue();
-    
-    // Request priority calculation using arrow functions
-    const calculateRequestPriority = (text, options = {}) => {
-        let priority = 0;
-        
-        // Base priority on text length (longer = higher priority within reason)
-        const textLength = text.length;
-        if (textLength > 1000 && textLength < 5000) {
-            priority += 3;
-        } else if (textLength >= 500 && textLength <= 1000) {
-            priority += 2;
-        } else if (textLength >= 100) {
-            priority += 1;
-        }
-        
-        // User interaction priority
-        if (options.userInitiated) {
-            priority += 5;
-        }
-        
-        // Real-time typing priority (lower)
-        if (options.realTime) {
-            priority -= 1;
-        }
-        
-        // High importance requests
-        if (options.highPriority) {
-            priority += 10;
-        }
-        
-        return Math.max(0, priority);
-    };
-    
-    // System load monitoring using function expressions
-    const monitorSystemLoad = function() {
-        const updateSystemLoad = function() {
-            // Monitor active requests
-            analysisState.systemLoad.activeRequests = analysisState.activeAnalyses.size;
-            
-            // Monitor memory usage if available
-            if ('memory' in performance) {
-                const memory = performance.memory;
-                analysisState.systemLoad.memoryUsage = 
-                    memory.usedJSHeapSize / memory.jsHeapSizeLimit;
-            }
-            
-            // Simple CPU usage estimation based on analysis timing
-            const recentAnalysisTime = analysisState.performanceMetrics.averageAnalysisTime;
-            if (recentAnalysisTime > 100) {
-                analysisState.systemLoad.cpuUsage = Math.min(recentAnalysisTime / 500, 1);
-            } else {
-                analysisState.systemLoad.cpuUsage = 0.1;
-            }
-            
-            // Adjust max concurrent analyses based on system performance
-            if (analysisState.systemLoad.memoryUsage > 0.8 || analysisState.systemLoad.cpuUsage > 0.7) {
-                analysisState.systemLoad.maxConcurrentAnalyses = 1;
-            } else if (analysisState.systemLoad.memoryUsage > 0.6 || analysisState.systemLoad.cpuUsage > 0.5) {
-                analysisState.systemLoad.maxConcurrentAnalyses = 2;
-            } else {
-                analysisState.systemLoad.maxConcurrentAnalyses = 3;
-            }
-        };
-        
-        // Update system load every 2 seconds
-        setInterval(updateSystemLoad, 2000);
-        
-        return updateSystemLoad;
-    };
-    
-    // Queue processor using arrow functions with async/await
-    const processAnalysisQueue = async () => {
-        // Skip if at capacity
-        if (analysisState.activeAnalyses.size >= analysisState.systemLoad.maxConcurrentAnalyses) {
+    /**
+     * Force immediate analysis (bypasses debouncing)
+     * @param {string} text - Text to analyze
+     */
+    const forceAnalysis = function(text) {
+        if (!text || typeof text !== 'string' || text.trim().length === 0) {
+            console.warn('Cannot analyze empty text');
             return;
         }
         
-        // Clean up stale requests
-        analysisQueue.cleanup();
+        const analysisId = generateAnalysisId();
+        currentAnalysisId = analysisId;
         
-        // Process next item in queue
-        const nextRequest = analysisQueue.dequeue();
-        if (!nextRequest) return;
+        // Cancel any pending debounced analysis
+        analysisQueue = [];
         
-        const { analysisId, text, options, resolve, reject } = nextRequest;
+        // Perform immediate analysis
+        performAnalysis(text, analysisId);
+    };
+    
+    /**
+     * Cancel current analysis
+     */
+    const cancelAnalysis = function() {
+        currentAnalysisId = null;
+        analysisQueue = [];
+        isAnalyzing = false;
+        hideLoadingState();
         
-        try {
-            // Mark as active
-            analysisState.activeAnalyses.set(analysisId, {
-                startTime: performance.now(),
-                text: text.substring(0, 100) + '...', // Store snippet for debugging
-                options
-            });
-            
-            // Perform the actual analysis
-            const result = await performAnalysis(text, options);
-            
-            // Update performance metrics
-            updatePerformanceMetrics(analysisId, result);
-            
-            // Resolve the promise
-            resolve(result);
-            
-        } catch (error) {
-            console.error(`❌ Analysis ${analysisId} failed:`, error);
-            reject(error);
-        } finally {
-            // Clean up active analysis
-            analysisState.activeAnalyses.delete(analysisId);
-            
-            // Process next item in queue
-            setTimeout(processAnalysisQueue, 10);
+        const statusElement = document.getElementById('analysis-status');
+        if (statusElement) {
+            statusElement.textContent = 'Analysis cancelled';
+            statusElement.style.color = 'orange';
         }
     };
     
-    // Core analysis function using destructuring
-    const performAnalysis = async (text, options = {}) => {
-        const startTime = performance.now();
-        
-        // Destructure options with defaults
-        const {
-            includePreprocessing = true,
-            includeAdvancedMetrics = true,
-            includeQualityAssessment = true,
-            preprocessingType = 'smart'
-        } = options;
-        
-        try {
-            let processedText = text;
-            let preprocessingResult = null;
-            
-            // Text preprocessing if requested
-            if (includePreprocessing && window.TextPreprocessor) {
-                if (preprocessingType === 'smart') {
-                    preprocessingResult = TextPreprocessor.smartPreprocess(text);
-                } else {
-                    preprocessingResult = TextPreprocessor.preprocess(text);
-                }
-                
-                processedText = preprocessingResult.processedText || text;
-            }
-            
-            // Basic text analysis using existing analyzer
-            const basicAnalysis = window.analyzeText ? 
-                analyzeText(processedText) : 
-                performBasicAnalysis(processedText);
-            
-            // Extract analysis components using destructuring
-            const {
-                statistics,
-                readability,
-                gradeLevel,
-                insights
-            } = basicAnalysis;
-            
-            // Advanced metrics if requested
-            let advancedMetrics = null;
-            if (includeAdvancedMetrics && window.InputProcessor) {
-                const properties = InputProcessor.extractProperties(processedText);
-                advancedMetrics = {
-                    wordAnalysis: properties.words,
-                    sentenceAnalysis: properties.sentences,
-                    characterAnalysis: properties.characters
-                };
-            }
-            
-            // Quality assessment if requested
-            let qualityAssessment = null;
-            if (includeQualityAssessment && window.TextPreprocessor) {
-                qualityAssessment = TextPreprocessor.assessQuality(processedText);
-            }
-            
-            const endTime = performance.now();
-            const processingTime = endTime - startTime;
-            
-            // Return comprehensive analysis result
-            return {
-                analysisId: options.analysisId || `analysis_${Date.now()}`,
-                timestamp: endTime,
-                processingTime,
-                text: {
-                    original: text,
-                    processed: processedText,
-                    preprocessing: preprocessingResult
-                },
-                analysis: {
-                    statistics,
-                    readability,
-                    gradeLevel,
-                    insights
-                },
-                advanced: advancedMetrics,
-                quality: qualityAssessment,
-                metadata: {
-                    textType: window.TextPreprocessor?.detectType(text) || 'general',
-                    processingOptions: options
-                }
-            };
-            
-        } catch (error) {
-            console.error('Analysis failed:', error);
-            throw new Error(`Analysis failed: ${error.message}`);
-        }
+    /**
+     * Check if analysis is currently running
+     * @returns {boolean} True if analysis is in progress
+     */
+    const isAnalysisRunning = function() {
+        return isAnalyzing;
     };
     
-    // Fallback basic analysis function
-    const performBasicAnalysis = (text) => {
-        const wordCount = Utils.text.countWords(text);
-        const sentenceCount = Utils.text.countSentences(text);
-        const paragraphCount = Utils.text.countParagraphs(text);
-        
+    /**
+     * Get analysis statistics
+     * @returns {object} Analysis performance statistics
+     */
+    const getAnalysisStats = function() {
         return {
-            statistics: {
-                words: wordCount,
-                characters: text.length,
-                sentences: sentenceCount,
-                paragraphs: paragraphCount,
-                averageWordsPerSentence: sentenceCount > 0 ? Utils.math.round(wordCount / sentenceCount) : 0,
-                averageSyllablesPerWord: 1.5 // Default estimate
-            },
-            readability: {
-                fleschReadingEase: {
-                    score: 50,
-                    level: 'moderate',
-                    interpretation: 'Standard readability'
-                },
-                fleschKincaidGrade: {
-                    score: 8,
-                    level: 'middle',
-                    interpretation: 'Middle school level'
-                }
-            },
-            gradeLevel: {
-                overall: {
-                    grade: 8,
-                    level: 'middle',
-                    description: 'Middle school reading level'
-                }
-            },
-            insights: {
-                strengths: ['Analysis completed'],
-                improvements: [],
-                recommendations: [],
-                overallAssessment: 'Basic analysis performed'
-            }
+            isAnalyzing,
+            queueLength: analysisQueue.length,
+            lastAnalysisTime,
+            currentAnalysisId
         };
     };
     
-    // Performance metrics update using arrow functions
-    const updatePerformanceMetrics = (analysisId, result) => {
-        const activeAnalysis = analysisState.activeAnalyses.get(analysisId);
-        if (!activeAnalysis) return;
+    /**
+     * Handle analyze button click using function expression
+     */
+    const handleAnalyzeClick = function() {
+        const textInput = document.getElementById('text-input');
+        if (!textInput) return;
         
-        const processingTime = performance.now() - activeAnalysis.startTime;
-        
-        // Update metrics using destructuring
-        const { performanceMetrics } = analysisState;
-        performanceMetrics.totalAnalyses++;
-        performanceMetrics.lastAnalysisTimestamp = performance.now();
-        
-        // Calculate running average
-        const { totalAnalyses, averageAnalysisTime } = performanceMetrics;
-        performanceMetrics.averageAnalysisTime = 
-            (averageAnalysisTime * (totalAnalyses - 1) + processingTime) / totalAnalyses;
-    };
-    
-    // Main debounced analysis function using function expression
-    const debouncedAnalyze = createAdaptiveDebounce(function(text, options = {}) {
-        return new Promise((resolve, reject) => {
-            // Validate input
-            if (!text || text.trim().length === 0) {
-                reject(new Error(errors.emptyText));
-                return;
-            }
-            
-            if (text.length > maxCharacters) {
-                reject(new Error(errors.textTooLong));
-                return;
-            }
-            
-            const wordCount = Utils.text.countWords(text);
-            if (wordCount < minWords) {
-                reject(new Error(errors.textTooShort));
-                return;
-            }
-            
-            // Generate analysis ID
-            const analysisId = `analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            
-            // Calculate priority
-            const priority = calculateRequestPriority(text, options);
-            
-            // Add to queue
-            analysisQueue.enqueue({
-                analysisId,
-                text,
-                options: { ...options, analysisId },
-                resolve,
-                reject
-            }, priority);
-            
-            // Process queue
-            processAnalysisQueue();
-        });
-    }, delays.progressStep, {
-        maxDelay: delays.progressStep * 3,
-        minDelay: delays.progressStep / 2,
-        loadFactor: true,
-        exponentialBackoff: true
-    });
-    
-    // Real-time analysis with smart throttling
-    const realtimeAnalyze = createSmartThrottle(
-        (text, options = {}) => debouncedAnalyze(text, { ...options, realTime: true }),
-        500,
-        {
-            maxExecutionsPerSecond: 3,
-            backPressureThreshold: 5,
-            adaptToLoad: true
-        }
-    );
-    
-    // User-initiated analysis (high priority)
-    const userAnalyze = (text, options = {}) => {
-        return debouncedAnalyze(text, { ...options, userInitiated: true, highPriority: true });
-    };
-    
-    // Batch analysis for multiple texts
-    const batchAnalyze = async (texts, options = {}) => {
-        const results = [];
-        const errors = [];
-        
-        // Process in small batches to avoid overwhelming the system
-        const batchSize = 2;
-        
-        for (let i = 0; i < texts.length; i += batchSize) {
-            const batch = texts.slice(i, i + batchSize);
-            
-            const batchPromises = batch.map(async (text, index) => {
-                try {
-                    const result = await debouncedAnalyze(text, {
-                        ...options,
-                        batchIndex: i + index,
-                        totalBatches: texts.length
-                    });
-                    results[i + index] = result;
-                } catch (error) {
-                    errors[i + index] = error;
-                }
-            });
-            
-            await Promise.allSettled(batchPromises);
-            
-            // Small delay between batches
-            if (i + batchSize < texts.length) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
+        const text = textInput.value.trim();
+        if (text.length === 0) {
+            utils.showMessage('Please enter some text to analyze', 'warning', 3000);
+            return;
         }
         
-        return { results, errors };
+        forceAnalysis(text);
     };
     
-    // Analysis cancellation
-    const cancelAnalysis = (analysisId) => {
-        // Remove from pending analyses
-        analysisState.pendingAnalyses.delete(analysisId);
+    /**
+     * Initialize the debounced analyzer
+     */
+    const initialize = function() {
+        const analyzeBtn = document.getElementById('analyze-btn');
         
-        // Mark active analysis for cancellation (if possible)
-        const activeAnalysis = analysisState.activeAnalyses.get(analysisId);
-        if (activeAnalysis) {
-            activeAnalysis.cancelled = true;
+        if (analyzeBtn) {
+            analyzeBtn.addEventListener('click', handleAnalyzeClick);
         }
+        
+        console.log('Debounced analyzer initialized');
     };
-    
-    // System status and diagnostics
-    const getSystemStatus = () => {
-        return {
-            queue: {
-                pending: analysisQueue.size(),
-                active: analysisState.activeAnalyses.size,
-                capacity: analysisState.systemLoad.maxConcurrentAnalyses
-            },
-            performance: { ...analysisState.performanceMetrics },
-            systemLoad: { ...analysisState.systemLoad },
-            isHealthy: analysisState.systemLoad.activeRequests < analysisState.systemLoad.maxConcurrentAnalyses
-        };
-    };
-    
-    // Initialize monitoring
-    monitorSystemLoad();
-    
-    // Queue cleanup interval
-    setInterval(() => {
-        analysisQueue.cleanup();
-    }, 10000);
     
     // Public API using object literal
     return {
-        // Main analysis methods
-        analyze: userAnalyze,              // High priority user-initiated analysis
-        analyzeRealtime: realtimeAnalyze,  // Throttled real-time analysis
-        analyzeBatch: batchAnalyze,        // Batch processing
-        
-        // Queue management
-        getQueueStatus: () => ({
-            pending: analysisQueue.size(),
-            active: analysisState.activeAnalyses.size
-        }),
-        
-        // System monitoring
-        getSystemStatus,
-        
-        // Analysis management
+        analyzeText,
+        forceAnalysis,
         cancelAnalysis,
-        
-        // Utility methods
-        createDebounce: createAdaptiveDebounce,
-        createThrottle: createSmartThrottle,
-        
-        // Performance metrics
-        getMetrics: () => ({ ...analysisState.performanceMetrics }),
-        resetMetrics: () => {
-            Object.assign(analysisState.performanceMetrics, {
-                totalAnalyses: 0,
-                averageAnalysisTime: 0,
-                queueProcessingTime: 0,
-                throttledRequests: 0,
-                lastAnalysisTimestamp: 0
-            });
-        }
+        isAnalysisRunning,
+        getAnalysisStats,
+        handleAnalyzeClick,
+        initialize
     };
-    
-})(); // IIFE - Self-invoking function immediately executes
+})();
 
-// Make DebouncedAnalyzer available globally
-window.DebouncedAnalyzer = DebouncedAnalyzer;
-
-// Export for module systems if available
+// Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = DebouncedAnalyzer;
+    module.exports = debouncedAnalyzer;
+} else if (typeof window !== 'undefined') {
+    window.debouncedAnalyzer = debouncedAnalyzer;
 }

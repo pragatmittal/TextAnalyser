@@ -1,500 +1,361 @@
 /**
  * Basic Statistics Engine
- * Technical Focus: Word & Character Counting with Modern JavaScript Patterns
- * Uses for...of, for loops, for...in loops, spread/rest operators
+ * Core statistical analysis functions for text analysis
+ * Uses for loops, for...of loops, for...in loops, spread operator, and rest operator
  */
 
-const BasicStatisticsEngine = (function() {
-    'use strict';
+const statisticsEngine = {
     
-    // Private configuration using object literal
-    const statisticsConfig = {
-        patterns: {
-            words: /\b\w+\b/g,
-            sentences: /[.!?]+/g,
-            paragraphs: /\n\s*\n/g,
-            whitespace: /\s+/g,
-            punctuation: /[^\w\s]/g
-        },
-        characterTypes: {
-            letters: /[a-zA-Z]/,
-            numbers: /[0-9]/,
-            spaces: /\s/,
-            punctuation: /[^\w\s]/,
-            special: /[^\w\s\d]/
-        },
-        commonWords: [
-            'the', 'and', 'a', 'to', 'of', 'in', 'i', 'you', 'it', 'have',
-            'to', 'that', 'for', 'do', 'he', 'with', 'on', 'this', 'we', 'be'
-        ]
-    };
-    
-    // Word counting function using for...of loops for arrays
-    const countWordsAdvanced = function(text) {
-        if (!text || typeof text !== 'string') {
-            return {
-                totalWords: 0,
-                uniqueWords: 0,
-                wordFrequency: {},
-                averageWordLength: 0,
-                longestWord: '',
-                shortestWord: ''
-            };
-        }
+    /**
+     * Count words in text using for...of loop
+     * @param {Array} words - Array of words to count
+     * @returns {number} Word count
+     */
+    countWords: function(words) {
+        if (!Array.isArray(words)) return 0;
         
-        // Extract words into array
-        const wordsArray = text.toLowerCase().match(statisticsConfig.patterns.words) || [];
-        
-        if (wordsArray.length === 0) {
-            return {
-                totalWords: 0,
-                uniqueWords: 0,
-                wordFrequency: {},
-                averageWordLength: 0,
-                longestWord: '',
-                shortestWord: ''
-            };
-        }
-        
-        let totalLength = 0;
-        let longestWord = '';
-        let shortestWord = wordsArray[0];
-        const wordFrequency = {};
-        const uniqueWordsSet = new Set();
-        
-        // Use for...of loop to iterate through words array
-        for (const word of wordsArray) {
-            // Skip empty words or continue to next iteration
-            if (!word) continue;
-            
-            // Track word frequency
-            wordFrequency[word] = (wordFrequency[word] || 0) + 1;
-            
-            // Add to unique words set
-            uniqueWordsSet.add(word);
-            
-            // Calculate total length for average
-            totalLength += word.length;
-            
-            // Find longest word
-            if (word.length > longestWord.length) {
-                longestWord = word;
-            }
-            
-            // Find shortest word
-            if (word.length < shortestWord.length) {
-                shortestWord = word;
+        let count = 0;
+        // Use for...of loop to iterate through word arrays
+        for (const word of words) {
+            if (word && word.trim().length > 0) {
+                count++;
             }
         }
-        
-        return {
-            totalWords: wordsArray.length,
-            uniqueWords: uniqueWordsSet.size,
-            wordFrequency: wordFrequency,
-            averageWordLength: Utils.math.round(totalLength / wordsArray.length, 2),
-            longestWord: longestWord,
-            shortestWord: shortestWord,
-            wordsArray: wordsArray // Include array for further processing
-        };
-    };
+        return count;
+    },
     
-    // Character counting with for loops and continue statements
-    const countCharactersAdvanced = function(text) {
-        if (!text || typeof text !== 'string') {
-            return {
-                totalCharacters: 0,
-                charactersNoSpaces: 0,
-                letters: 0,
-                numbers: 0,
-                spaces: 0,
-                punctuation: 0,
-                specialCharacters: 0,
-                characterFrequency: {},
-                characterTypes: {}
-            };
-        }
+    /**
+     * Count characters in text using traditional for loop
+     * @param {string} text - Text to analyze
+     * @param {boolean} includeSpaces - Whether to include spaces in count
+     * @returns {number} Character count
+     */
+    countCharacters: function(text, includeSpaces = true) {
+        if (!text || typeof text !== 'string') return 0;
         
-        let totalCharacters = text.length;
-        let charactersNoSpaces = 0;
-        let letters = 0;
-        let numbers = 0;
-        let spaces = 0;
-        let punctuation = 0;
-        let specialCharacters = 0;
-        const characterFrequency = {};
-        const characterTypes = {
-            letters: [],
-            numbers: [],
-            spaces: [],
-            punctuation: [],
-            special: []
-        };
-        
-        // Use traditional for loop with continue statements for character analysis
+        let count = 0;
+        // Use traditional for loop for character counting
         for (let i = 0; i < text.length; i++) {
             const char = text[i];
             
-            // Skip null or undefined characters
-            if (char === null || char === undefined) {
+            // Use continue statement to skip whitespace when needed
+            if (!includeSpaces && (char === ' ' || char === '\t' || char === '\n')) {
                 continue;
             }
             
-            // Count character frequency
-            characterFrequency[char] = (characterFrequency[char] || 0) + 1;
-            
-            // Count characters excluding spaces
-            if (char !== ' ' && char !== '\n' && char !== '\t' && char !== '\r') {
-                charactersNoSpaces++;
-            }
-            
-            // Categorize character types using continue for specific cases
-            if (statisticsConfig.characterTypes.letters.test(char)) {
-                letters++;
-                characterTypes.letters.push(char);
-                continue; // Skip to next character after categorizing
-            }
-            
-            if (statisticsConfig.characterTypes.numbers.test(char)) {
-                numbers++;
-                characterTypes.numbers.push(char);
-                continue;
-            }
-            
-            if (statisticsConfig.characterTypes.spaces.test(char)) {
-                spaces++;
-                characterTypes.spaces.push(char);
-                continue;
-            }
-            
-            if (statisticsConfig.characterTypes.punctuation.test(char)) {
-                punctuation++;
-                characterTypes.punctuation.push(char);
-                continue;
-            }
-            
-            // If none of the above, it's a special character
-            specialCharacters++;
-            characterTypes.special.push(char);
+            count++;
         }
-        
-        return {
-            totalCharacters,
-            charactersNoSpaces,
-            letters,
-            numbers,
-            spaces,
-            punctuation,
-            specialCharacters,
-            characterFrequency,
-            characterTypes,
-            averageCharactersPerWord: totalCharacters > 0 ? Utils.math.round(totalCharacters / (text.match(/\b\w+\b/g) || []).length, 2) : 0
-        };
-    };
+        return count;
+    },
     
-    // Sentence detection using for...in loops for pattern matching
-    const detectSentencesAdvanced = function(text) {
+    /**
+     * Count different types of characters using for loop with continue
+     * @param {string} text - Text to analyze
+     * @returns {object} Character type counts
+     */
+    countCharacterTypes: function(text) {
         if (!text || typeof text !== 'string') {
             return {
-                totalSentences: 0,
-                sentences: [],
-                averageWordsPerSentence: 0,
-                averageCharactersPerSentence: 0,
-                sentenceTypes: {},
-                complexityScore: 0
+                letters: 0,
+                digits: 0,
+                spaces: 0,
+                punctuation: 0,
+                special: 0
             };
         }
         
-        // Define sentence ending patterns with their types
-        const sentencePatterns = {
-            declarative: /[^.!?]*\.(?!\d)/g,  // Ends with period (not decimal)
-            exclamatory: /[^.!?]*!/g,         // Ends with exclamation
-            interrogative: /[^.!?]*\?/g,      // Ends with question mark
-            compound: /[^.!?]*[.!?][.!?]+/g   // Multiple punctuation
+        const counts = {
+            letters: 0,
+            digits: 0,
+            spaces: 0,
+            punctuation: 0,
+            special: 0
         };
         
-        let totalSentences = 0;
-        const sentences = [];
-        const sentenceTypes = {
-            declarative: 0,
-            exclamatory: 0,
-            interrogative: 0,
-            compound: 0
-        };
-        let totalWords = 0;
-        let totalCharacters = 0;
-        let complexityScore = 0;
-        
-        // Use for...in loop to iterate through pattern properties
-        for (const patternType in sentencePatterns) {
-            // Skip inherited properties
-            if (!sentencePatterns.hasOwnProperty(patternType)) {
+        // Use traditional for loop for character analysis
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            
+            // Use continue statements to skip certain character types
+            if (char.match(/[a-zA-Z]/)) {
+                counts.letters++;
                 continue;
             }
             
-            const pattern = sentencePatterns[patternType];
-            const matches = text.match(pattern) || [];
-            
-            // Process each match using for...of
-            for (const match of matches) {
-                const cleanSentence = match.trim();
-                
-                // Skip empty sentences
-                if (!cleanSentence) continue;
-                
-                sentences.push({
-                    text: cleanSentence,
-                    type: patternType,
-                    wordCount: (cleanSentence.match(/\b\w+\b/g) || []).length,
-                    characterCount: cleanSentence.length
-                });
-                
-                sentenceTypes[patternType]++;
-                totalSentences++;
-                
-                // Calculate metrics for this sentence
-                const wordsInSentence = (cleanSentence.match(/\b\w+\b/g) || []).length;
-                totalWords += wordsInSentence;
-                totalCharacters += cleanSentence.length;
-                
-                // Calculate complexity based on length and punctuation
-                if (wordsInSentence > 20) complexityScore += 2;
-                if (wordsInSentence > 15) complexityScore += 1;
-                if (/[,;:]/.test(cleanSentence)) complexityScore += 1;
-            }
-        }
-        
-        // Remove duplicates and sort sentences by appearance
-        const uniqueSentences = [...new Set(sentences.map(s => s.text))]
-            .map(text => sentences.find(s => s.text === text));
-        
-        return {
-            totalSentences: uniqueSentences.length,
-            sentences: uniqueSentences,
-            averageWordsPerSentence: totalSentences > 0 ? Utils.math.round(totalWords / totalSentences, 2) : 0,
-            averageCharactersPerSentence: totalSentences > 0 ? Utils.math.round(totalCharacters / totalSentences, 2) : 0,
-            sentenceTypes,
-            complexityScore: Utils.math.round(complexityScore / Math.max(totalSentences, 1), 2)
-        };
-    };
-    
-    // Array manipulation using spread operator
-    const processTextSegments = function(...textSegments) {
-        // Use rest operator to handle multiple text segments
-        if (textSegments.length === 0) {
-            return {
-                combinedText: '',
-                segmentAnalysis: [],
-                totalStats: {},
-                comparison: {}
-            };
-        }
-        
-        // Use spread operator to create a new array and process segments
-        const processedSegments = [...textSegments].map((segment, index) => {
-            if (typeof segment !== 'string') {
-                console.warn(`Segment ${index} is not a string, converting...`);
-                segment = String(segment || '');
+            if (char.match(/[0-9]/)) {
+                counts.digits++;
+                continue;
             }
             
-            return {
-                index,
-                originalText: segment,
-                wordStats: countWordsAdvanced(segment),
-                characterStats: countCharactersAdvanced(segment),
-                sentenceStats: detectSentencesAdvanced(segment)
-            };
-        });
-        
-        // Combine all segments using spread operator
-        const combinedText = [...textSegments].join(' ');
-        
-        // Calculate total statistics using spread operator for array operations
-        const allWords = processedSegments.reduce((acc, segment) => {
-            return [...acc, ...segment.wordStats.wordsArray];
-        }, []);
-        
-        const totalStats = {
-            segments: textSegments.length,
-            totalWords: allWords.length,
-            totalCharacters: combinedText.length,
-            totalSentences: processedSegments.reduce((sum, seg) => sum + seg.sentenceStats.totalSentences, 0),
-            averageWordsPerSegment: Utils.math.round(allWords.length / textSegments.length, 2),
-            combinedWordStats: countWordsAdvanced(combinedText),
-            combinedCharacterStats: countCharactersAdvanced(combinedText),
-            combinedSentenceStats: detectSentencesAdvanced(combinedText)
-        };
-        
-        // Create comparison between segments
-        const comparison = compareSegments(...processedSegments);
-        
-        return {
-            combinedText,
-            segmentAnalysis: processedSegments,
-            totalStats,
-            comparison
-        };
-    };
-    
-    // Segment comparison using spread and rest operators
-    const compareSegments = function(...segments) {
-        if (segments.length < 2) {
-            return {
-                mostWordy: null,
-                mostComplex: null,
-                mostDiverse: null,
-                similarities: []
-            };
+            if (char.match(/\s/)) {
+                counts.spaces++;
+                continue;
+            }
+            
+            if (char.match(/[.,!?;:()\[\]{}'"`~@#$%^&*+=|\\\/<>]/)) {
+                counts.punctuation++;
+                continue;
+            }
+            
+            counts.special++;
         }
         
-        // Use spread operator to create comparison arrays
-        const wordCounts = [...segments].map(seg => seg.wordStats.totalWords);
-        const complexityScores = [...segments].map(seg => seg.sentenceStats.complexityScore);
-        const diversityScores = [...segments].map(seg => seg.wordStats.uniqueWords / Math.max(seg.wordStats.totalWords, 1));
+        return counts;
+    },
+    
+    /**
+     * Count sentences using for...in loop to check pattern properties
+     * @param {string} text - Text to analyze
+     * @returns {number} Sentence count
+     */
+    countSentences: function(text) {
+        if (!text || typeof text !== 'string') return 0;
         
-        // Find segments with extreme values
-        const mostWordyIndex = wordCounts.indexOf(Math.max(...wordCounts));
-        const mostComplexIndex = complexityScores.indexOf(Math.max(...complexityScores));
-        const mostDiverseIndex = diversityScores.indexOf(Math.max(...diversityScores));
+        let sentenceCount = 0;
+        let inAbbreviation = false;
         
-        // Calculate similarities between segments
-        const similarities = [];
-        for (let i = 0; i < segments.length; i++) {
-            for (let j = i + 1; j < segments.length; j++) {
-                const similarity = calculateSimilarity(segments[i], segments[j]);
-                similarities.push({
-                    segment1: i,
-                    segment2: j,
-                    similarity: similarity
-                });
+        // Handle abbreviations first
+        let processedText = text;
+        const abbreviationPatterns = config.validation.abbreviationPatterns;
+        
+        // Use for...in loop to check pattern properties
+        for (const patternIndex in abbreviationPatterns) {
+            const pattern = abbreviationPatterns[patternIndex];
+            processedText = processedText.replace(pattern, match => match.replace('.', '|ABBREV|'));
+        }
+        
+        // Count sentence endings
+        for (let i = 0; i < processedText.length; i++) {
+            const char = processedText[i];
+            
+            // Skip if we're in an abbreviation
+            if (char === '|') {
+                inAbbreviation = !inAbbreviation;
+                continue;
+            }
+            
+            if (!inAbbreviation && (char === '.' || char === '!' || char === '?')) {
+                sentenceCount++;
             }
         }
         
+        return Math.max(1, sentenceCount); // At least one sentence
+    },
+    
+    /**
+     * Count paragraphs using for loop
+     * @param {string} text - Text to analyze
+     * @returns {number} Paragraph count
+     */
+    countParagraphs: function(text) {
+        if (!text || typeof text !== 'string') return 0;
+        
+        const paragraphs = text.split(/\n\s*\n/);
+        let count = 0;
+        
+        // Use for loop to count non-empty paragraphs
+        for (let i = 0; i < paragraphs.length; i++) {
+            if (paragraphs[i].trim().length > 0) {
+                count++;
+            }
+        }
+        
+        return Math.max(1, count); // At least one paragraph
+    },
+    
+    /**
+     * Calculate reading time using for loop
+     * @param {number} wordCount - Number of words
+     * @param {string} readingSpeed - Reading speed preference
+     * @returns {number} Reading time in minutes
+     */
+    calculateReadingTime: function(wordCount, readingSpeed = 'average') {
+        if (wordCount <= 0) return 0;
+        
+        const speeds = config.readingSpeeds;
+        const wordsPerMinute = speeds[readingSpeed] || speeds.average;
+        
+        return wordCount / wordsPerMinute;
+    },
+    
+    /**
+     * Analyze word frequency using spread operator and for...of loop
+     * @param {Array} words - Array of words to analyze
+     * @param {number} maxWords - Maximum number of frequent words to return
+     * @returns {Array} Array of word frequency objects
+     */
+    analyzeWordFrequency: function(words, maxWords = config.displayFormats.maxFrequencyWords) {
+        if (!Array.isArray(words) || words.length === 0) return [];
+        
+        const frequencyMap = new Map();
+        
+        // Use for...of loop to count word frequencies
+        for (const word of words) {
+            const normalizedWord = word.toLowerCase().trim();
+            if (normalizedWord.length === 0) continue;
+            
+            frequencyMap.set(normalizedWord, (frequencyMap.get(normalizedWord) || 0) + 1);
+        }
+        
+        // Convert to array and sort using spread operator
+        const sortedWords = [...frequencyMap.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, maxWords)
+            .map(([word, count]) => ({ word, count }));
+        
+        return sortedWords;
+    },
+    
+    /**
+     * Calculate average metrics using for...of loop
+     * @param {Array} values - Array of numeric values
+     * @returns {number} Average value
+     */
+    calculateAverage: function(values) {
+        if (!Array.isArray(values) || values.length === 0) return 0;
+        
+        let sum = 0;
+        let count = 0;
+        
+        // Use for...of loop to sum values
+        for (const value of values) {
+            if (typeof value === 'number' && !isNaN(value)) {
+                sum += value;
+                count++;
+            }
+        }
+        
+        return count > 0 ? sum / count : 0;
+    },
+    
+    /**
+     * Calculate text density using rest operator
+     * @param {number} wordCount - Total word count
+     * @param {...number} paragraphCounts - Variable number of paragraph counts
+     * @returns {number} Average words per paragraph
+     */
+    calculateTextDensity: function(wordCount, ...paragraphCounts) {
+        // Use rest operator to collect multiple paragraph counts
+        const totalParagraphs = paragraphCounts.reduce((sum, count) => sum + count, 0);
+        
+        if (totalParagraphs === 0) return 0;
+        return wordCount / totalParagraphs;
+    },
+    
+    /**
+     * Get comprehensive text statistics using multiple analysis methods
+     * @param {string} text - Text to analyze
+     * @returns {object} Complete statistics object
+     */
+    getComprehensiveStatistics: function(text) {
+        if (!text || typeof text !== 'string') {
+            return utils.deepCopy(config.resultTemplates.basicStats);
+        }
+        
+        // Process text using the preprocessor
+        const processedData = textPreprocessor.processText(text);
+        
+        // Extract basic counts
+        const wordCount = this.countWords(processedData.words);
+        const charCount = this.countCharacters(text, true);
+        const charCountNoSpaces = this.countCharacters(text, false);
+        const sentenceCount = this.countSentences(text);
+        const paragraphCount = this.countParagraphs(text);
+        
+        // Calculate derived metrics
+        const readingTime = this.calculateReadingTime(wordCount);
+        const avgWordsPerSentence = sentenceCount > 0 ? wordCount / sentenceCount : 0;
+        const avgWordsPerParagraph = paragraphCount > 0 ? wordCount / paragraphCount : 0;
+        
+        // Analyze word frequency using spread operator
+        const wordFrequency = this.analyzeWordFrequency(processedData.words);
+        
+        // Calculate character type distribution
+        const characterTypes = this.countCharacterTypes(text);
+        
+        // Calculate average sentence length in characters
+        const sentences = processedData.sentences;
+        const sentenceLengths = sentences.map(sentence => sentence.length);
+        const avgSentenceLength = this.calculateAverage(sentenceLengths);
+        
+        // Use spread operator to combine arrays for additional analysis
+        const allWords = [...processedData.words];
+        const complexWords = allWords.filter(word => utils.countSyllables(word) > 3);
+        const longWords = allWords.filter(word => word.length > 6);
+        
+        // Calculate percentages using rest operator
+        const complexWordsPercentage = wordCount > 0 ? (complexWords.length / wordCount) * 100 : 0;
+        const longWordsPercentage = wordCount > 0 ? (longWords.length / wordCount) * 100 : 0;
+        
+        // Calculate syllables and readability metrics
+        const totalSyllables = allWords.reduce((total, word) => total + utils.countSyllables(word), 0);
+        const avgSyllablesPerWord = wordCount > 0 ? totalSyllables / wordCount : 0;
+        
+        // Calculate readability scores
+        const fleschScore = utils.calculateFleschScore(avgWordsPerSentence, avgSyllablesPerWord);
+        const gradeLevel = utils.calculateGradeLevel(avgWordsPerSentence, avgSyllablesPerWord);
+        const gunningFog = utils.calculateGunningFog(avgWordsPerSentence, complexWordsPercentage);
+        
+        // Get interpretations
+        const fleschInterpretation = utils.getFleschInterpretation(fleschScore);
+        const gradeInterpretation = utils.getGradeLevelInterpretation(gradeLevel);
+        const gunningFogInterpretation = utils.getGunningFogInterpretation(gunningFog);
+        
         return {
-            mostWordy: segments[mostWordyIndex],
-            mostComplex: segments[mostComplexIndex],
-            mostDiverse: segments[mostDiverseIndex],
-            similarities: similarities.sort((a, b) => b.similarity - a.similarity)
-        };
-    };
-    
-    // Calculate similarity between two segments
-    const calculateSimilarity = (segment1, segment2) => {
-        const words1 = new Set(segment1.wordStats.wordsArray);
-        const words2 = new Set(segment2.wordStats.wordsArray);
-        
-        // Calculate Jaccard similarity
-        const intersection = new Set([...words1].filter(word => words2.has(word)));
-        const union = new Set([...words1, ...words2]);
-        
-        return union.size > 0 ? Utils.math.round(intersection.size / union.size, 3) : 0;
-    };
-    
-    // Comprehensive text analysis combining all methods
-    const analyzeTextComprehensively = function(text, options = {}) {
-        const {
-            includeWordAnalysis = true,
-            includeCharacterAnalysis = true,
-            includeSentenceAnalysis = true,
-            includeAdvancedMetrics = true
-        } = options;
-        
-        const analysisResult = {
-            timestamp: new Date().toISOString(),
-            textLength: text ? text.length : 0,
-            analysisOptions: options
-        };
-        
-        if (includeWordAnalysis) {
-            analysisResult.words = countWordsAdvanced(text);
-        }
-        
-        if (includeCharacterAnalysis) {
-            analysisResult.characters = countCharactersAdvanced(text);
-        }
-        
-        if (includeSentenceAnalysis) {
-            analysisResult.sentences = detectSentencesAdvanced(text);
-        }
-        
-        if (includeAdvancedMetrics) {
-            analysisResult.advanced = calculateAdvancedMetrics(text, analysisResult);
-        }
-        
-        return analysisResult;
-    };
-    
-    // Calculate advanced metrics using all previous analyses
-    const calculateAdvancedMetrics = (text, basicAnalysis) => {
-        const { words = {}, characters = {}, sentences = {} } = basicAnalysis;
-        
-        return {
-            readabilityIndicators: {
-                averageWordsPerSentence: sentences.averageWordsPerSentence || 0,
-                averageCharactersPerWord: words.averageWordLength || 0,
-                vocabularyDiversity: words.totalWords > 0 ? Utils.math.round(words.uniqueWords / words.totalWords, 3) : 0,
-                punctuationDensity: characters.totalCharacters > 0 ? Utils.math.round(characters.punctuation / characters.totalCharacters, 3) : 0
+            // Basic statistics
+            basicStats: {
+                wordCount,
+                charCount,
+                charCountNoSpaces,
+                sentenceCount,
+                paragraphCount,
+                readingTime
             },
-            textComplexity: {
-                sentenceComplexity: sentences.complexityScore || 0,
-                wordComplexity: words.averageWordLength > 6 ? 'high' : words.averageWordLength > 4 ? 'medium' : 'low',
-                overallComplexity: calculateOverallComplexity(words, characters, sentences)
+            
+            // Readability analysis
+            readability: {
+                avgWordsPerSentence: utils.formatNumber(avgWordsPerSentence),
+                avgSyllablesPerWord: utils.formatNumber(avgSyllablesPerWord),
+                fleschScore: utils.formatNumber(fleschScore),
+                fleschInterpretation: `${fleschInterpretation.label} (${fleschInterpretation.description})`,
+                gradeLevel: utils.formatNumber(gradeLevel),
+                gradeInterpretation: `${gradeInterpretation.label} (${gradeInterpretation.range})`,
+                gunningFog: utils.formatNumber(gunningFog),
+                gunningFogInterpretation: `${gunningFogInterpretation.label} (${gunningFogInterpretation.description})`
             },
-            textBalance: {
-                letterToNumberRatio: characters.numbers > 0 ? Utils.math.round(characters.letters / characters.numbers, 2) : characters.letters,
-                wordToSentenceRatio: sentences.totalSentences > 0 ? Utils.math.round(words.totalWords / sentences.totalSentences, 2) : 0,
-                punctuationBalance: Utils.math.round(characters.punctuation / Math.max(sentences.totalSentences, 1), 2)
+            
+            // Text complexity
+            complexity: {
+                longWordsCount: longWords.length,
+                longWordsPercentage: utils.formatPercentage(longWords.length, wordCount),
+                complexWordsCount: complexWords.length,
+                complexWordsPercentage: utils.formatPercentage(complexWords.length, wordCount),
+                avgSentenceLength: utils.formatNumber(avgSentenceLength),
+                textDensity: utils.formatNumber(avgWordsPerParagraph)
+            },
+            
+            // Word frequency
+            frequency: wordFrequency,
+            
+            // Additional metrics
+            characterTypes,
+            totalSyllables,
+            avgWordsPerParagraph: utils.formatNumber(avgWordsPerParagraph),
+            
+            // Raw data for further processing
+            rawData: {
+                words: allWords,
+                sentences,
+                paragraphs: processedData.paragraphs,
+                processedData
             }
         };
-    };
-    
-    // Calculate overall complexity score
-    const calculateOverallComplexity = (words, characters, sentences) => {
-        let score = 0;
-        
-        // Word complexity factors
-        if (words.averageWordLength > 6) score += 2;
-        if (words.uniqueWords / Math.max(words.totalWords, 1) > 0.7) score += 1;
-        
-        // Sentence complexity factors
-        if (sentences.averageWordsPerSentence > 20) score += 2;
-        if (sentences.complexityScore > 1.5) score += 1;
-        
-        // Character complexity factors
-        if (characters.specialCharacters / Math.max(characters.totalCharacters, 1) > 0.1) score += 1;
-        
-        return Utils.math.round(score / 6, 2); // Normalize to 0-1 scale
-    };
-    
-    // Public API
-    return {
-        // Core counting functions
-        countWords: countWordsAdvanced,
-        countCharacters: countCharactersAdvanced,
-        detectSentences: detectSentencesAdvanced,
-        
-        // Multi-segment processing
-        processSegments: processTextSegments,
-        compareSegments: compareSegments,
-        
-        // Comprehensive analysis
-        analyze: analyzeTextComprehensively,
-        
-        // Utility methods
-        calculateSimilarity: calculateSimilarity,
-        getConfig: () => ({ ...statisticsConfig }),
-        
-        // Batch processing for multiple texts
-        analyzeBatch: function(...texts) {
-            return texts.map(text => analyzeTextComprehensively(text));
-        }
-    };
-    
-})();
+    }
+};
 
-// Make available globally
-window.BasicStatisticsEngine = BasicStatisticsEngine;
-
-// Export for module systems
+// Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = BasicStatisticsEngine;
+    module.exports = statisticsEngine;
+} else if (typeof window !== 'undefined') {
+    window.statisticsEngine = statisticsEngine;
 }
