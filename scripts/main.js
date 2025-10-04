@@ -142,24 +142,23 @@
         console.log('🔧 Initializing Advanced Input Processing System...');
         
         try {
-            // Initialize TextPreprocessor module
+            // Check TextPreprocessor module availability
             if (typeof TextPreprocessor !== 'undefined') {
-                TextPreprocessor.init();
-                console.log('✅ TextPreprocessor module initialized');
+                console.log('✅ TextPreprocessor module loaded and ready');
             } else {
                 console.warn('⚠️ TextPreprocessor module not found');
             }
             
-            // Initialize DebouncedAnalyzer module
+            // Check DebouncedAnalyzer module availability
             if (typeof DebouncedAnalyzer !== 'undefined') {
-                DebouncedAnalyzer.init();
-                console.log('✅ DebouncedAnalyzer module initialized');
+                console.log('✅ DebouncedAnalyzer module loaded and ready');
             } else {
                 console.warn('⚠️ DebouncedAnalyzer module not found');
             }
             
             // Initialize InputProcessor module (should be last as it may depend on others)
             if (typeof InputProcessor !== 'undefined') {
+                // InputProcessor auto-initializes, but we can call init again safely
                 InputProcessor.init();
                 console.log('✅ InputProcessor module initialized');
                 
@@ -187,39 +186,69 @@
             return;
         }
         
-        // Setup debounced input processing
-        const debouncedProcessor = DebouncedAnalyzer.createProcessor(textInput, {
-            debounceDelay: 500,
-            enablePreprocessing: true,
-            enableValidation: true,
-            onProcess: (processedText, metadata) => {
-                // Update UI with processed text information
-                updateInputMetadata(metadata);
-                
-                // Enable/disable analyze button based on validation
-                if (analyzeBtn) {
-                    analyzeBtn.disabled = !metadata.isValid;
-                }
-                
-                // Auto-save if feature is enabled
-                if (App.features.persistence && metadata.isValid) {
-                    saveSessionData();
-                }
-            },
-            onError: (error) => {
-                console.error('Input processing error:', error);
-                showInputError(error.message);
+        // Create a debounced analyzer function using the DebouncedAnalyzer module
+        const debouncedAnalyzer = DebouncedAnalyzer.createDebounce((text, metadata) => {
+            // Process text through the TextPreprocessor pipeline
+            const preprocessedText = TextPreprocessor.process(text);
+            
+            // Validate input using InputProcessor
+            const validationResult = InputProcessor.validateInput(preprocessedText);
+            
+            // Extract text properties using InputProcessor
+            const properties = InputProcessor.extractProperties(preprocessedText);
+            
+            // Update UI with processed text information
+            updateInputMetadata({
+                wordCount: properties.words.count,
+                charCount: properties.characters.total,
+                isValid: validationResult.isValid,
+                estimatedReadingTime: Math.ceil(properties.words.count / 250), // ~250 words per minute
+                validationErrors: validationResult.errors
+            });
+            
+            // Enable/disable analyze button based on validation
+            if (analyzeBtn) {
+                analyzeBtn.disabled = !validationResult.isValid;
             }
+            
+            // Auto-save if feature is enabled
+            if (App.features.persistence && validationResult.isValid) {
+                saveSessionData();
+            }
+            
+        }, 500, {
+            maxDelay: 2000,
+            loadFactor: true
         });
         
-        // Setup input validation with visual feedback
-        InputProcessor.attachTo(textInput, {
-            enableRealTimeValidation: true,
-            showValidationFeedback: true,
-            preprocessText: true,
-            onValidationChange: (isValid, errors) => {
-                updateValidationUI(isValid, errors);
-            }
+        // Add input event listener with debounced processing
+        textInput.addEventListener('input', (event) => {
+            const text = event.target.value;
+            
+            // Call debounced analyzer with current text
+            debouncedAnalyzer(text, {
+                timestamp: Date.now(),
+                element: event.target
+            });
+        });
+        
+        // Add paste event handling
+        textInput.addEventListener('paste', (event) => {
+            setTimeout(() => {
+                // Process pasted content after paste completes
+                const text = event.target.value;
+                if (text.length > 5000) {
+                    console.log('📋 Large paste detected, optimizing processing');
+                    if (window.showToast) {
+                        showToast('Processing large text...', 'info', 1000);
+                    }
+                }
+                debouncedAnalyzer(text, {
+                    timestamp: Date.now(),
+                    element: event.target,
+                    isPaste: true
+                });
+            }, 100);
         });
         
         console.log('🎯 Advanced input handling setup complete');

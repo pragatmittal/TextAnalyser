@@ -65,49 +65,135 @@ const analyzeText = function(inputText, template = 'default') {
     }
 };
 
-// Statistics calculation using function expression
+// Enhanced statistics calculation using the new Basic Statistics Engine
 const calculateStatistics = function(text) {
+    try {
+        // Use the new Basic Statistics Engine for comprehensive analysis
+        const basicStats = BasicStatisticsEngine.analyze(text, {
+            includeWordAnalysis: true,
+            includeCharacterAnalysis: true,
+            includeSentenceAnalysis: true,
+            includeAdvancedMetrics: true
+        });
+        
+        // Extract data using destructuring from the new engine
+        const {
+            words: {
+                totalWords,
+                uniqueWords,
+                averageWordLength,
+                longestWord,
+                shortestWord,
+                wordFrequency
+            },
+            characters: {
+                totalCharacters,
+                charactersNoSpaces,
+                letters,
+                numbers,
+                spaces,
+                punctuation
+            },
+            sentences: {
+                totalSentences,
+                averageWordsPerSentence,
+                averageCharactersPerSentence,
+                sentenceTypes,
+                complexityScore
+            },
+            advanced: {
+                readabilityIndicators,
+                textComplexity,
+                textBalance
+            }
+        } = basicStats;
+        
+        // Calculate additional metrics for compatibility
+        const paragraphs = text.split(/\n\s*\n/).filter(para => para.trim().length > 0);
+        const totalSyllables = calculateTotalSyllables(text);
+        
+        // Find most common words excluding common ones
+        const filteredFrequency = Object.entries(wordFrequency)
+            .filter(([word, count]) => 
+                !CALCULATION_CONSTANTS.commonWords.includes(word.toLowerCase()) && 
+                word.length > 2 && 
+                count > 1
+            )
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 5)
+            .map(([word, count]) => ({ word, count }));
+
+        return {
+            characters: totalCharacters,
+            charactersNoSpaces: charactersNoSpaces,
+            words: totalWords,
+            sentences: totalSentences,
+            paragraphs: Math.max(paragraphs.length, 1),
+            totalSyllables: totalSyllables,
+            averageWordsPerSentence: averageWordsPerSentence,
+            averageSentencesPerParagraph: Math.max(paragraphs.length, 1) > 0 ? Utils.math.round(totalSentences / Math.max(paragraphs.length, 1), 1) : 0,
+            averageSyllablesPerWord: totalWords > 0 ? Utils.math.round(totalSyllables / totalWords, 2) : 0,
+            averageWordLength: averageWordLength,
+            longestWord: longestWord,
+            shortestWord: shortestWord,
+            mostCommonWords: filteredFrequency,
+            
+            // Enhanced statistics from new engine
+            uniqueWords: uniqueWords,
+            vocabularyDiversity: readabilityIndicators.vocabularyDiversity,
+            sentenceComplexity: complexityScore,
+            characterTypes: {
+                letters,
+                numbers,
+                spaces,
+                punctuation
+            },
+            sentenceTypes: sentenceTypes,
+            textBalance: textBalance,
+            readabilityIndicators: readabilityIndicators
+        };
+        
+    } catch (error) {
+        console.error('Statistics calculation error:', error);
+        // Fallback to basic calculation
+        return calculateBasicStatistics(text);
+    }
+};
+
+// Fallback basic statistics calculation
+const calculateBasicStatistics = function(text) {
     const words = text.match(/\b\w+\b/g) || [];
     const sentences = Utils.text.extractSentences(text);
     const paragraphs = text.split(/\n\s*\n/).filter(para => para.trim().length > 0);
     
-    // Calculate syllables for all words
-    let totalSyllables = 0;
-    const wordLengths = [];
-    const wordFrequency = Utils.text.getWordFrequency(text);
-    
-    words.forEach(word => {
-        const syllableCount = Utils.text.countSyllables(word);
-        totalSyllables += syllableCount;
-        wordLengths.push(word.length);
-    });
-
-    // Find most common words (excluding very common ones)
-    const filteredFrequency = Object.entries(wordFrequency)
-        .filter(([word, count]) => 
-            !CALCULATION_CONSTANTS.commonWords.includes(word.toLowerCase()) && 
-            word.length > 2 && 
-            count > 1
-        )
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 5)
-        .map(([word, count]) => ({ word, count }));
-
     return {
         characters: text.length,
         charactersNoSpaces: text.replace(/\s/g, '').length,
         words: words.length,
         sentences: sentences.length,
         paragraphs: Math.max(paragraphs.length, 1),
-        totalSyllables: totalSyllables,
+        totalSyllables: 0,
         averageWordsPerSentence: sentences.length > 0 ? Utils.math.round(words.length / sentences.length, 1) : 0,
-        averageSentencesPerParagraph: Math.max(paragraphs.length, 1) > 0 ? Utils.math.round(sentences.length / Math.max(paragraphs.length, 1), 1) : 0,
-        averageSyllablesPerWord: words.length > 0 ? Utils.math.round(totalSyllables / words.length, 2) : 0,
-        averageWordLength: words.length > 0 ? Utils.math.round(Utils.math.average(wordLengths), 1) : 0,
-        longestWord: words.reduce((longest, word) => word.length > longest.length ? word : longest, ''),
-        shortestWord: words.reduce((shortest, word) => word.length < shortest.length ? word : shortest, words[0] || ''),
-        mostCommonWords: filteredFrequency
+        averageSentencesPerParagraph: 0,
+        averageSyllablesPerWord: 0,
+        averageWordLength: 0,
+        longestWord: '',
+        shortestWord: '',
+        mostCommonWords: []
     };
+};
+
+// Helper function to calculate total syllables
+const calculateTotalSyllables = function(text) {
+    const words = text.match(/\b\w+\b/g) || [];
+    let totalSyllables = 0;
+    
+    // Use for...of loop to count syllables
+    for (const word of words) {
+        totalSyllables += Utils.text.countSyllables(word);
+    }
+    
+    return totalSyllables;
 };
 
 // Readability scores calculation using function expression
