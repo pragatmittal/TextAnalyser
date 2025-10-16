@@ -10,6 +10,8 @@ const TextAnalyzerApp = {
     // Application state
     isInitialized: false,
     components: {},
+    preferences: null,
+    cache: null,
     
     /**
      * Initialize all application components using function expression
@@ -18,8 +20,14 @@ const TextAnalyzerApp = {
         console.log('Initializing Text Analyzer Application...');
         
         try {
+            // Initialize storage systems (Day 9)
+            this.initializeStorage();
+            
             // Initialize components in dependency order
             this.initializeComponents();
+            
+            // Initialize advanced features (Day 11)
+            this.initializeAdvancedFeatures();
             
             // Set up global error handling
             this.setupErrorHandling();
@@ -27,16 +35,31 @@ const TextAnalyzerApp = {
             // Set up keyboard shortcuts
             this.setupKeyboardShortcuts();
             
+            // Load user preferences
+            this.loadPreferences();
+            
             // Mark as initialized
             this.isInitialized = true;
             
             console.log('Text Analyzer Application initialized successfully');
-            utils.showMessage('Application ready! Start typing to analyze your text.', 'success', 3000);
+            console.log('API Status:', TextAnalyzerAPI.getStatus());
+            
+            UIUpdater.showToast('Application ready! Start typing to analyze your text.', 'success', 3000);
             
         } catch (error) {
             console.error('Application initialization failed:', error);
-            utils.showMessage('Failed to initialize application. Please refresh the page.', 'error', 5000);
+            UIUpdater.showToast('Failed to initialize application. Please refresh the page.', 'error', 5000);
         }
+    },
+    
+    /**
+     * Initialize storage systems
+     */
+    initializeStorage: function() {
+        this.preferences = new PreferencesManager();
+        this.cache = new CacheManager();
+        
+        console.log('✅ Storage systems initialized');
     },
     
     /**
@@ -66,6 +89,153 @@ const TextAnalyzerApp = {
             window.analyzer.initialize();
             TextAnalyzerApp.components.analyzer = window.analyzer;
         }
+        
+        console.log('✅ Core components initialized');
+    },
+    
+    /**
+     * Initialize advanced features
+     */
+    initializeAdvancedFeatures: function() {
+        // Add export button functionality
+        const exportBtn = document.getElementById('export-btn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => this.exportAnalysis());
+        }
+        
+        // Add settings functionality
+        const settingsBtn = document.getElementById('settings-btn');
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', () => this.showSettings());
+        }
+        
+        console.log('✅ Advanced features initialized');
+    },
+    
+    /**
+     * Load user preferences
+     */
+    loadPreferences: function() {
+        const prefs = this.preferences.getAllPreferences();
+        
+        // Apply theme
+        if (prefs.theme) {
+            document.body.setAttribute('data-theme', prefs.theme);
+        }
+        
+        // Apply font size
+        if (prefs.fontSize) {
+            document.documentElement.style.setProperty('--base-font-size', `${prefs.fontSize}px`);
+        }
+        
+        console.log('✅ User preferences loaded:', prefs);
+    },
+    
+    /**
+     * Export current analysis
+     */
+    exportAnalysis: async function() {
+        const textarea = document.getElementById('text-input');
+        if (!textarea || !textarea.value.trim()) {
+            UIUpdater.showToast('No text to analyze', 'warning', 2000);
+            return;
+        }
+        
+        try {
+            // Get complete analysis
+            const analysis = TextAnalyzerAPI.analyze(textarea.value);
+            
+            // Create exporter
+            const exporter = new ExportManager({ format: 'json', prettify: true });
+            
+            // Export to JSON
+            const jsonData = exporter.toJSON(analysis);
+            
+            // Download file
+            const filename = `text-analysis-${Date.now()}.json`;
+            exporter.downloadFile(jsonData, filename, 'application/json');
+            
+            // Also copy to clipboard
+            const copied = await exporter.copyToClipboard(jsonData);
+            
+            if (copied) {
+                UIUpdater.showToast('Analysis exported and copied to clipboard!', 'success', 3000);
+            } else {
+                UIUpdater.showToast('Analysis exported successfully!', 'success', 3000);
+            }
+            
+        } catch (error) {
+            console.error('Export failed:', error);
+            UIUpdater.showToast('Failed to export analysis', 'error', 3000);
+        }
+    },
+    
+    /**
+     * Show settings modal
+     */
+    showSettings: function() {
+        const prefs = this.preferences.getAllPreferences();
+        
+        const settingsHTML = `
+            <div class="modal" id="settings-modal">
+                <div class="modal-content">
+                    <h2>Settings</h2>
+                    <div class="settings-group">
+                        <label>Theme:</label>
+                        <select id="theme-select">
+                            <option value="light" ${prefs.theme === 'light' ? 'selected' : ''}>Light</option>
+                            <option value="dark" ${prefs.theme === 'dark' ? 'selected' : ''}>Dark</option>
+                        </select>
+                    </div>
+                    <div class="settings-group">
+                        <label>Font Size:</label>
+                        <input type="number" id="font-size-input" min="12" max="24" value="${prefs.fontSize}">
+                    </div>
+                    <div class="settings-group">
+                        <label>
+                            <input type="checkbox" id="auto-save-check" ${prefs.autoSave ? 'checked' : ''}>
+                            Auto-save preferences
+                        </label>
+                    </div>
+                    <div class="modal-actions">
+                        <button id="save-settings-btn">Save</button>
+                        <button id="cancel-settings-btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add to body
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = settingsHTML;
+        document.body.appendChild(modalContainer);
+        
+        // Setup event listeners
+        document.getElementById('save-settings-btn').addEventListener('click', () => {
+            this.saveSettings();
+            modalContainer.remove();
+        });
+        
+        document.getElementById('cancel-settings-btn').addEventListener('click', () => {
+            modalContainer.remove();
+        });
+    },
+    
+    /**
+     * Save settings
+     */
+    saveSettings: function() {
+        const theme = document.getElementById('theme-select').value;
+        const fontSize = parseInt(document.getElementById('font-size-input').value);
+        const autoSave = document.getElementById('auto-save-check').checked;
+        
+        this.preferences
+            .setPreference('theme', theme)
+            .setPreference('fontSize', fontSize)
+            .setPreference('autoSave', autoSave);
+        
+        this.loadPreferences();
+        UIUpdater.showToast('Settings saved!', 'success', 2000);
     },
     
     /**
@@ -75,7 +245,7 @@ const TextAnalyzerApp = {
         // Global error handler
         window.addEventListener('error', function(event) {
             console.error('Global error:', event.error);
-            utils.showMessage('An unexpected error occurred. Please try again.', 'error', 4000);
+            UIUpdater.showToast('An unexpected error occurred. Please try again.', 'error', 4000);
         });
         
         // Unhandled promise rejection handler

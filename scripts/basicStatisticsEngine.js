@@ -353,9 +353,65 @@ const statisticsEngine = {
     }
 };
 
+// Create BasicStatisticsEngine object for cleaner API
+const BasicStatisticsEngine = {
+    // Main analysis method - returns simplified format for API compatibility
+    analyze: function(text) {
+        const comprehensive = statisticsEngine.getComprehensiveStatistics(text);
+        
+        // Return both comprehensive data and simplified access
+        return {
+            // Simplified access for compatibility
+            words: comprehensive.basicStats ? {
+                totalWords: comprehensive.basicStats.wordCount,
+                uniqueWords: comprehensive.rawData?.words ? new Set(comprehensive.rawData.words).size : 0,
+                averageWordLength: comprehensive.rawData?.words ? 
+                    comprehensive.rawData.words.reduce((sum, w) => sum + w.length, 0) / comprehensive.rawData.words.length : 0
+            } : { totalWords: 0, uniqueWords: 0, averageWordLength: 0 },
+            
+            characters: comprehensive.basicStats ? {
+                total: comprehensive.basicStats.charCount,
+                withoutSpaces: comprehensive.basicStats.charCountNoSpaces
+            } : { total: 0, withoutSpaces: 0 },
+            
+            sentences: comprehensive.basicStats ? {
+                count: comprehensive.basicStats.sentenceCount,
+                averageWordsPerSentence: parseFloat(comprehensive.readability?.avgWordsPerSentence || 0)
+            } : { count: 0, averageWordsPerSentence: 0 },
+            
+            paragraphs: comprehensive.basicStats ? {
+                count: comprehensive.basicStats.paragraphCount
+            } : { count: 0 },
+            
+            readingTime: comprehensive.basicStats?.readingTime || 0,
+            
+            // Include full comprehensive data
+            comprehensive: comprehensive
+        };
+    },
+    
+    // Direct access to individual methods
+    countWords: statisticsEngine.countWords,
+    countCharacters: statisticsEngine.countCharacters,
+    countSentences: statisticsEngine.countSentences,
+    countParagraphs: statisticsEngine.countParagraphs,
+    calculateAverage: statisticsEngine.calculateAverage,
+    calculateReadingTime: statisticsEngine.calculateReadingTime,
+    analyzeWordFrequency: statisticsEngine.analyzeWordFrequency,
+    getComprehensiveStatistics: statisticsEngine.getComprehensiveStatistics,
+    
+    // Alias for compatibility
+    getStats: function(text) {
+        return statisticsEngine.getComprehensiveStatistics(text);
+    }
+};
+
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = statisticsEngine;
 } else if (typeof window !== 'undefined') {
     window.statisticsEngine = statisticsEngine;
+    window.BasicStatisticsEngine = BasicStatisticsEngine; // Export with cleaner name
 }
+
+

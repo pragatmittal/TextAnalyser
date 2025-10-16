@@ -2,6 +2,38 @@
 
 A sophisticated text analysis web application built with vanilla JavaScript that evaluates text complexity, readability, and provides detailed statistics. The application analyzes user input in real-time and displays multiple metrics including word count, reading time, grade level, and readability scores.
 
+## 🚀 Quick Start
+
+### Option 1: Interactive Demo (Recommended)
+```bash
+# Open the feature demonstration page
+open demo.html
+```
+The demo page includes interactive examples for all features from Days 4-15.
+
+### Option 2: Main Application
+```bash
+# Open the main application
+open index.html
+```
+Start typing in the text area for real-time analysis.
+
+### ✅ Verify Installation
+After opening demo.html, check the browser console. You should see:
+```
+✅ All modules loaded successfully!
+🎉 Text Analyzer Demo loaded!
+```
+
+**All tests passing:** Click "Run All Tests" button → Should show 4/4 tests passed ✅
+
+## 📚 Documentation
+
+- **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)** - Complete API documentation & examples
+- **[SUMMARY.md](SUMMARY.md)** - Project completion summary
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - One-page cheat sheet
+- **[BUGFIXES.md](BUGFIXES.md)** - Recent fixes and troubleshooting
+
 ## Features
 
 ### 📊 **Comprehensive Analysis**

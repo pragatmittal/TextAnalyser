@@ -328,11 +328,22 @@ const utils = {
                     continue;
                     
                 case 3:
-                    // Check for extremely long words
+                    // Check for extremely long words (excluding URLs, file paths, and markdown links)
                     const words = text.split(/\s+/);
                     for (const word of words) {
-                        if (word.length > processing.maxWordLength) {
-                            errors.push(`Word "${word}" is too long (${processing.maxWordLength} character limit)`);
+                        // Skip URLs, file paths, and markdown links
+                        if (word.match(/^https?:\/\//i) || 
+                            word.match(/^file:\/\//i) || 
+                            word.match(/^\[.*\]\(.*\)$/) ||
+                            word.match(/^[a-z]:\\/i)) {
+                            continue;
+                        }
+                        
+                        // Remove common punctuation and check actual word length
+                        const cleanWord = word.replace(/[^\w'-]/g, '');
+                        
+                        if (cleanWord.length > processing.maxWordLength) {
+                            errors.push(`Word "${cleanWord}" is too long (${processing.maxWordLength} character limit)`);
                             break;
                         }
                     }
@@ -357,9 +368,59 @@ const utils = {
     }
 };
 
+// Create Utils object with math utilities for module compatibility
+const Utils = {
+    math: {
+        round: (num, decimals = 2) => {
+            return Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals);
+        },
+        average: (arr) => {
+            return arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+        },
+        sum: (arr) => {
+            return arr.reduce((a, b) => a + b, 0);
+        },
+        min: (arr) => {
+            return arr.length > 0 ? Math.min(...arr) : 0;
+        },
+        max: (arr) => {
+            return arr.length > 0 ? Math.max(...arr) : 0;
+        },
+        median: (arr) => {
+            if (arr.length === 0) return 0;
+            const sorted = [...arr].sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            return sorted.length % 2 === 0 
+                ? (sorted[mid - 1] + sorted[mid]) / 2 
+                : sorted[mid];
+        },
+        standardDeviation: (arr) => {
+            if (arr.length === 0) return 0;
+            const avg = Utils.math.average(arr);
+            const squareDiffs = arr.map(value => Math.pow(value - avg, 2));
+            const avgSquareDiff = Utils.math.average(squareDiffs);
+            return Math.sqrt(avgSquareDiff);
+        }
+    },
+    text: {
+        capitalizeFirst: (str) => {
+            return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        },
+        truncate: (str, maxLength) => {
+            return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
+        }
+    },
+    dom: {
+        getElementById: (id) => document.getElementById(id),
+        querySelector: (selector) => document.querySelector(selector),
+        querySelectorAll: (selector) => document.querySelectorAll(selector)
+    }
+};
+
 // Export utils for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = utils;
 } else if (typeof window !== 'undefined') {
     window.utils = utils;
+    window.Utils = Utils; // Export capitalized version for module compatibility
 }
