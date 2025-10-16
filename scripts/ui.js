@@ -10,6 +10,8 @@ const ui = (function() {
     // Cache DOM elements for performance
     const elements = {
         textInput: null,
+        saveBtn: null,
+        restoreBtn: null,
         wordCount: null,
         charCount: null,
         charNoSpacesCount: null,
@@ -39,6 +41,8 @@ const ui = (function() {
      */
     const initializeElements = function() {
         elements.textInput = document.getElementById('text-input');
+        elements.saveBtn = document.getElementById('save-btn');
+        elements.restoreBtn = document.getElementById('restore-btn');
         elements.wordCount = document.getElementById('word-count');
         elements.charCount = document.getElementById('char-count');
         elements.charNoSpacesCount = document.getElementById('char-no-spaces-count');
@@ -61,6 +65,36 @@ const ui = (function() {
         elements.textDensity = document.getElementById('text-density');
         elements.frequencyList = document.getElementById('frequency-list');
         elements.copyResultsBtn = document.getElementById('copy-results-btn');
+    };
+
+    /**
+     * Save current textarea content to localStorage
+     */
+    const saveTextarea = function() {
+        if (!elements.textInput) return;
+        try {
+            const value = elements.textInput.value || '';
+            localStorage.setItem('textAnalyzer_lastText', value);
+            utils.showMessage('Text saved to localStorage', 'success', 2000);
+        } catch (err) {
+            console.error('Save error:', err);
+            utils.showMessage('Failed to save text', 'error', 3000);
+        }
+    };
+
+    /**
+     * Restore textarea content from localStorage
+     */
+    const restoreTextarea = function() {
+        if (!elements.textInput) return;
+        try {
+            const saved = localStorage.getItem('textAnalyzer_lastText') || '';
+            elements.textInput.value = saved;
+            utils.showMessage('Text restored from localStorage', 'success', 2000);
+        } catch (err) {
+            console.error('Restore error:', err);
+            utils.showMessage('Failed to restore text', 'error', 3000);
+        }
     };
     
     /**
@@ -355,6 +389,12 @@ const ui = (function() {
         // Add event listeners
         if (elements.copyResultsBtn) {
             elements.copyResultsBtn.addEventListener('click', handleCopyResultsClick);
+        }
+        if (elements.saveBtn) {
+            elements.saveBtn.addEventListener('click', saveTextarea);
+        }
+        if (elements.restoreBtn) {
+            elements.restoreBtn.addEventListener('click', restoreTextarea);
         }
         
         // Initialize with empty state

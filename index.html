@@ -32,11 +32,22 @@
                 </div>
 
                 <!-- Control Buttons -->
-                <div class="controls" role="group" aria-label="Text analysis controls">
+                    <div class="controls" role="group" aria-label="Text analysis controls">
                     <button id="clear-btn" class="btn btn-secondary" type="button" aria-label="Clear text input">
                         <span class="btn-icon">🗑️</span>
                         Clear
                     </button>
+                    
+                        <!-- Save / Restore buttons -->
+                        <button id="save-btn" class="btn btn-secondary" type="button" aria-label="Save text to local storage">
+                            <span class="btn-icon">💾</span>
+                            Save
+                        </button>
+                        <button id="restore-btn" class="btn btn-secondary" type="button" aria-label="Restore text from local storage">
+                            <span class="btn-icon">📥</span>
+                            Restore
+                        </button>
+
                     <button id="copy-results-btn" class="btn btn-primary" type="button" aria-label="Copy analysis results">
                         <span class="btn-icon">📋</span>
                         Copy Results
