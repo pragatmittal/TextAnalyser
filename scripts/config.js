@@ -1,11 +1,5 @@
-/**
- * Configuration object for Text Analyzer
- * Contains all settings, thresholds, and default values
- */
 
-// Main configuration object using object literal syntax
 const config = {
-    // Reading speeds for different reading levels (words per minute)
     readingSpeeds: {
         slow: 200,
         average: 250,
@@ -13,7 +7,6 @@ const config = {
         expert: 400
     },
     
-    // Grade level thresholds and their corresponding difficulty labels
     gradeLevelThresholds: {
         elementary: { min: 0, max: 6, label: 'Elementary School' },
         middle: { min: 7, max: 9, label: 'Middle School' },
@@ -22,7 +15,6 @@ const config = {
         graduate: { min: 17, max: Infinity, label: 'Graduate Level' }
     },
     
-    // Flesch Reading Ease score interpretations
     fleschInterpretations: {
         veryEasy: { min: 90, max: 100, label: 'Very Easy', description: '5th grade level' },
         easy: { min: 80, max: 89, label: 'Easy', description: '6th grade level' },
@@ -33,7 +25,6 @@ const config = {
         veryDifficult: { min: 0, max: 29, label: 'Very Difficult', description: 'Graduate level' }
     },
     
-    // Gunning Fog Index interpretations
     gunningFogInterpretations: {
         veryEasy: { min: 0, max: 8, label: 'Very Easy', description: 'Elementary school level' },
         easy: { min: 9, max: 12, label: 'Easy', description: 'High school level' },
@@ -42,7 +33,6 @@ const config = {
         veryDifficult: { min: 21, max: Infinity, label: 'Very Difficult', description: 'Graduate level' }
     },
     
-    // Display format preferences
     displayFormats: {
         decimalPlaces: 2,
         percentageDecimalPlaces: 1,
@@ -51,7 +41,6 @@ const config = {
         maxFrequencyWords: 10
     },
     
-    // Text processing settings
     processing: {
         debounceDelay: 500, // milliseconds
         minTextLength: 1,
@@ -60,7 +49,6 @@ const config = {
         minWordLength: 1
     },
     
-    // Input validation settings
     validation: {
         allowedSpecialChars: /[.,!?;:()\[\]{}'"`~@#$%^&*+=|\\\/<>]/g,
         sentenceEndings: /[.!?]+$/,
@@ -71,7 +59,6 @@ const config = {
         ]
     },
     
-    // Analysis result templates
     resultTemplates: {
         basicStats: {
             wordCount: 0,
@@ -102,7 +89,6 @@ const config = {
         frequency: []
     },
     
-    // Default configuration values
     defaults: {
         readingSpeed: 'average',
         showAdvancedMetrics: true,
@@ -111,7 +97,6 @@ const config = {
     }
 };
 
-// Export configuration for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = config;
 } else if (typeof window !== 'undefined') {

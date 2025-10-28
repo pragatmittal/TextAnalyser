@@ -1,13 +1,7 @@
-/**
- * Debounced Analyzer Module
- * Handles real-time text analysis with debouncing and performance optimization
- * Uses function expressions and arrow functions as specified
- */
 
 const debouncedAnalyzer = (function() {
     'use strict';
     
-    // Private state variables
     let isAnalyzing = false;
     let analysisQueue = [];
     let lastAnalysisTime = 0;
@@ -28,10 +22,8 @@ const debouncedAnalyzer = (function() {
         showLoadingState();
         
         try {
-            // Perform comprehensive text analysis
             const results = statisticsEngine.getComprehensiveStatistics(text);
             
-            // Check if analysis is still current before updating UI
             if (analysisId === currentAnalysisId && window.ui) {
                 window.ui.updateResults(results);
                 hideLoadingState();
@@ -54,7 +46,6 @@ const debouncedAnalyzer = (function() {
      * Debounced analysis function using function expression
      */
     const debouncedAnalysis = utils.debounce(function(text, analysisId) {
-        // Only proceed if this is the most recent analysis request
         if (analysisId === currentAnalysisId) {
             performAnalysis(text, analysisId);
         }
@@ -111,26 +102,20 @@ const debouncedAnalyzer = (function() {
      */
     const analyzeText = function(text) {
         return new Promise((resolve, reject) => {
-            // Validate input
             if (!text || typeof text !== 'string' || text.trim().length === 0) {
                 reject(new Error('Invalid or empty text input'));
                 return;
             }
             
-            // Generate unique ID for this analysis
             const analysisId = generateAnalysisId();
             currentAnalysisId = analysisId;
             
-            // Clear any pending analysis
             analysisQueue = [];
             
-            // Add to queue
             analysisQueue.push({ text, analysisId, resolve, reject });
             
-            // Start debounced analysis
             debouncedAnalysis(text, analysisId);
             
-            // Set up timeout for analysis
             setTimeout(() => {
                 if (analysisId === currentAnalysisId && isAnalyzing) {
                     currentAnalysisId = null;
@@ -153,10 +138,8 @@ const debouncedAnalyzer = (function() {
         const analysisId = generateAnalysisId();
         currentAnalysisId = analysisId;
         
-        // Cancel any pending debounced analysis
         analysisQueue = [];
         
-        // Perform immediate analysis
         performAnalysis(text, analysisId);
     };
     
@@ -226,7 +209,6 @@ const debouncedAnalyzer = (function() {
         console.log('Debounced analyzer initialized');
     };
     
-    // Public API using object literal
     return {
         analyzeText,
         forceAnalysis,
@@ -238,7 +220,6 @@ const debouncedAnalyzer = (function() {
     };
 })();
 
-// Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = debouncedAnalyzer;
 } else if (typeof window !== 'undefined') {

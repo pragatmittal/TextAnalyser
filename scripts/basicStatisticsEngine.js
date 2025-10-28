@@ -1,8 +1,3 @@
-/**
- * Basic Statistics Engine
- * Core statistical analysis functions for text analysis
- * Uses for loops, for...of loops, for...in loops, spread operator, and rest operator
- */
 
 const statisticsEngine = {
     
@@ -15,7 +10,6 @@ const statisticsEngine = {
         if (!Array.isArray(words)) return 0;
         
         let count = 0;
-        // Use for...of loop to iterate through word arrays
         for (const word of words) {
             if (word && word.trim().length > 0) {
                 count++;
@@ -34,11 +28,9 @@ const statisticsEngine = {
         if (!text || typeof text !== 'string') return 0;
         
         let count = 0;
-        // Use traditional for loop for character counting
         for (let i = 0; i < text.length; i++) {
             const char = text[i];
             
-            // Use continue statement to skip whitespace when needed
             if (!includeSpaces && (char === ' ' || char === '\t' || char === '\n')) {
                 continue;
             }
@@ -72,11 +64,9 @@ const statisticsEngine = {
             special: 0
         };
         
-        // Use traditional for loop for character analysis
         for (let i = 0; i < text.length; i++) {
             const char = text[i];
             
-            // Use continue statements to skip certain character types
             if (char.match(/[a-zA-Z]/)) {
                 counts.letters++;
                 continue;
@@ -114,21 +104,17 @@ const statisticsEngine = {
         let sentenceCount = 0;
         let inAbbreviation = false;
         
-        // Handle abbreviations first
         let processedText = text;
         const abbreviationPatterns = config.validation.abbreviationPatterns;
         
-        // Use for...in loop to check pattern properties
         for (const patternIndex in abbreviationPatterns) {
             const pattern = abbreviationPatterns[patternIndex];
             processedText = processedText.replace(pattern, match => match.replace('.', '|ABBREV|'));
         }
         
-        // Count sentence endings
         for (let i = 0; i < processedText.length; i++) {
             const char = processedText[i];
             
-            // Skip if we're in an abbreviation
             if (char === '|') {
                 inAbbreviation = !inAbbreviation;
                 continue;
@@ -153,7 +139,6 @@ const statisticsEngine = {
         const paragraphs = text.split(/\n\s*\n/);
         let count = 0;
         
-        // Use for loop to count non-empty paragraphs
         for (let i = 0; i < paragraphs.length; i++) {
             if (paragraphs[i].trim().length > 0) {
                 count++;
@@ -189,7 +174,6 @@ const statisticsEngine = {
         
         const frequencyMap = new Map();
         
-        // Use for...of loop to count word frequencies
         for (const word of words) {
             const normalizedWord = word.toLowerCase().trim();
             if (normalizedWord.length === 0) continue;
@@ -197,7 +181,6 @@ const statisticsEngine = {
             frequencyMap.set(normalizedWord, (frequencyMap.get(normalizedWord) || 0) + 1);
         }
         
-        // Convert to array and sort using spread operator
         const sortedWords = [...frequencyMap.entries()]
             .sort((a, b) => b[1] - a[1])
             .slice(0, maxWords)
@@ -217,7 +200,6 @@ const statisticsEngine = {
         let sum = 0;
         let count = 0;
         
-        // Use for...of loop to sum values
         for (const value of values) {
             if (typeof value === 'number' && !isNaN(value)) {
                 sum += value;
@@ -252,57 +234,45 @@ const statisticsEngine = {
             return utils.deepCopy(config.resultTemplates.basicStats);
         }
         
-        // Process text using the preprocessor
         const processedData = textPreprocessor.processText(text);
         
-        // Extract basic counts
         const wordCount = this.countWords(processedData.words);
         const charCount = this.countCharacters(text, true);
         const charCountNoSpaces = this.countCharacters(text, false);
         const sentenceCount = this.countSentences(text);
         const paragraphCount = this.countParagraphs(text);
         
-        // Calculate derived metrics
         const readingTime = this.calculateReadingTime(wordCount);
         const avgWordsPerSentence = sentenceCount > 0 ? wordCount / sentenceCount : 0;
         const avgWordsPerParagraph = paragraphCount > 0 ? wordCount / paragraphCount : 0;
         
-        // Analyze word frequency using spread operator
         const wordFrequency = this.analyzeWordFrequency(processedData.words);
         
-        // Calculate character type distribution
         const characterTypes = this.countCharacterTypes(text);
         
-        // Calculate average sentence length in characters
         const sentences = processedData.sentences;
         const sentenceLengths = sentences.map(sentence => sentence.length);
         const avgSentenceLength = this.calculateAverage(sentenceLengths);
         
-        // Use spread operator to combine arrays for additional analysis
         const allWords = [...processedData.words];
         const complexWords = allWords.filter(word => utils.countSyllables(word) > 3);
         const longWords = allWords.filter(word => word.length > 6);
         
-        // Calculate percentages using rest operator
         const complexWordsPercentage = wordCount > 0 ? (complexWords.length / wordCount) * 100 : 0;
         const longWordsPercentage = wordCount > 0 ? (longWords.length / wordCount) * 100 : 0;
         
-        // Calculate syllables and readability metrics
         const totalSyllables = allWords.reduce((total, word) => total + utils.countSyllables(word), 0);
         const avgSyllablesPerWord = wordCount > 0 ? totalSyllables / wordCount : 0;
         
-        // Calculate readability scores
         const fleschScore = utils.calculateFleschScore(avgWordsPerSentence, avgSyllablesPerWord);
         const gradeLevel = utils.calculateGradeLevel(avgWordsPerSentence, avgSyllablesPerWord);
         const gunningFog = utils.calculateGunningFog(avgWordsPerSentence, complexWordsPercentage);
         
-        // Get interpretations
         const fleschInterpretation = utils.getFleschInterpretation(fleschScore);
         const gradeInterpretation = utils.getGradeLevelInterpretation(gradeLevel);
         const gunningFogInterpretation = utils.getGunningFogInterpretation(gunningFog);
         
         return {
-            // Basic statistics
             basicStats: {
                 wordCount,
                 charCount,
@@ -312,7 +282,6 @@ const statisticsEngine = {
                 readingTime
             },
             
-            // Readability analysis
             readability: {
                 avgWordsPerSentence: utils.formatNumber(avgWordsPerSentence),
                 avgSyllablesPerWord: utils.formatNumber(avgSyllablesPerWord),
@@ -324,7 +293,6 @@ const statisticsEngine = {
                 gunningFogInterpretation: `${gunningFogInterpretation.label} (${gunningFogInterpretation.description})`
             },
             
-            // Text complexity
             complexity: {
                 longWordsCount: longWords.length,
                 longWordsPercentage: utils.formatPercentage(longWords.length, wordCount),
@@ -334,15 +302,12 @@ const statisticsEngine = {
                 textDensity: utils.formatNumber(avgWordsPerParagraph)
             },
             
-            // Word frequency
             frequency: wordFrequency,
             
-            // Additional metrics
             characterTypes,
             totalSyllables,
             avgWordsPerParagraph: utils.formatNumber(avgWordsPerParagraph),
             
-            // Raw data for further processing
             rawData: {
                 words: allWords,
                 sentences,
@@ -353,15 +318,12 @@ const statisticsEngine = {
     }
 };
 
-// Create BasicStatisticsEngine object for cleaner API
+// Creating BasicStatisticsEngine object for cleaner API
 const BasicStatisticsEngine = {
-    // Main analysis method - returns simplified format for API compatibility
     analyze: function(text) {
         const comprehensive = statisticsEngine.getComprehensiveStatistics(text);
         
-        // Return both comprehensive data and simplified access
         return {
-            // Simplified access for compatibility
             words: comprehensive.basicStats ? {
                 totalWords: comprehensive.basicStats.wordCount,
                 uniqueWords: comprehensive.rawData?.words ? new Set(comprehensive.rawData.words).size : 0,
@@ -385,12 +347,10 @@ const BasicStatisticsEngine = {
             
             readingTime: comprehensive.basicStats?.readingTime || 0,
             
-            // Include full comprehensive data
             comprehensive: comprehensive
         };
     },
     
-    // Direct access to individual methods
     countWords: statisticsEngine.countWords,
     countCharacters: statisticsEngine.countCharacters,
     countSentences: statisticsEngine.countSentences,
@@ -400,13 +360,11 @@ const BasicStatisticsEngine = {
     analyzeWordFrequency: statisticsEngine.analyzeWordFrequency,
     getComprehensiveStatistics: statisticsEngine.getComprehensiveStatistics,
     
-    // Alias for compatibility
     getStats: function(text) {
         return statisticsEngine.getComprehensiveStatistics(text);
     }
 };
 
-// Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = statisticsEngine;
 } else if (typeof window !== 'undefined') {

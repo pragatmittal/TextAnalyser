@@ -1,14 +1,7 @@
-/**
- * Input Processing Module
- * Handles text input management, debouncing, and validation
- * Uses IIFE, function expressions, and validation with for loops
- */
 
-// Self-invoking function (IIFE) to initialize the input module and protect scope
 const inputProcessor = (function() {
     'use strict';
     
-    // Private variables to maintain state
     let currentText = '';
     let isValidInput = false;
     let validationErrors = [];
@@ -35,11 +28,9 @@ const inputProcessor = (function() {
         const processing = config.processing;
         let isValid = true;
         
-        // Use for loop with break statement to stop on first critical error
         for (let i = 0; i < 6; i++) {
             switch (i) {
                 case 0:
-                    // Check if text exists and is string
                     if (!text || typeof text !== 'string') {
                         errors.push('Input must be valid text');
                         isValid = false;

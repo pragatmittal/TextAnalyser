@@ -1,13 +1,7 @@
-/**
- * Analysis Orchestrator Module
- * Coordinates all analysis components and provides unified analysis interface
- * Uses function expressions and arrow functions for coordination
- */
 
 const analyzer = (function() {
     'use strict';
     
-    // Analysis state management
     let currentAnalysisData = null;
     let analysisHistory = [];
     let maxHistorySize = 10;
@@ -28,10 +22,8 @@ const analyzer = (function() {
             }
             
             try {
-                // Perform comprehensive analysis
                 const results = statisticsEngine.getComprehensiveStatistics(text);
                 
-                // Store analysis data
                 currentAnalysisData = {
                     text: text,
                     results: results,
@@ -39,10 +31,8 @@ const analyzer = (function() {
                     analysisId: generateAnalysisId()
                 };
                 
-                // Add to history
                 addToHistory(currentAnalysisData);
                 
-                // Update UI
                 if (window.ui) {
                     window.ui.updateResults(results);
                 }
@@ -71,7 +61,6 @@ const analyzer = (function() {
     const addToHistory = function(analysisData) {
         analysisHistory.unshift(analysisData);
         
-        // Limit history size
         if (analysisHistory.length > maxHistorySize) {
             analysisHistory = analysisHistory.slice(0, maxHistorySize);
         }
@@ -132,12 +121,10 @@ const analyzer = (function() {
         try {
             const data = JSON.parse(jsonData);
             
-            // Validate imported data structure
             if (!data.results || !data.text) {
                 throw new Error('Invalid analysis data format');
             }
             
-            // Create analysis data object
             const analysisData = {
                 text: data.text,
                 results: data.results,
@@ -145,11 +132,9 @@ const analyzer = (function() {
                 analysisId: data.metadata?.analysisId || generateAnalysisId()
             };
             
-            // Set as current analysis
             currentAnalysisData = analysisData;
             addToHistory(analysisData);
             
-            // Update UI
             if (window.ui) {
                 window.ui.updateResults(data.results);
             }
@@ -208,7 +193,6 @@ const analyzer = (function() {
             }
         };
         
-        // Compare readability scores
         const read1 = analysis1.readability;
         const read2 = analysis2.readability;
         
@@ -225,7 +209,6 @@ const analyzer = (function() {
             }
         };
         
-        // Generate summary
         comparison.summary = {
             moreReadable: comparison.readability.fleschScore.text2 > comparison.readability.fleschScore.text1,
             longerText: comparison.basicStats.wordCount.text2 > comparison.basicStats.wordCount.text1,
@@ -269,10 +252,8 @@ const analyzer = (function() {
     const initialize = function() {
         console.log('Analyzer module initialized');
         
-        // Clear any existing data
         clearHistory();
         
-        // Set default history size
         setMaxHistorySize(10);
     };
     
@@ -291,7 +272,6 @@ const analyzer = (function() {
     };
 })();
 
-// Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = analyzer;
 } else if (typeof window !== 'undefined') {

@@ -1,19 +1,7 @@
-/**
- * Frequency Analysis Module
- * Day 8: Data Structures & Frequency Analysis - Word Frequency & Unique Collections
- * 
- * Technical Focus:
- * - Set data structure for unique word tracking
- * - Map for key-value pairs in frequency analysis
- * - for...in loops for object property iteration
- * - Spread operator for merging analysis results
- * - Sorting algorithms with array methods and forEach
- */
 
 const FrequencyAnalyzer = (function() {
     'use strict';
     
-    // Private configuration
     const config = {
         stopWords: new Set([
             'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
@@ -52,40 +40,30 @@ const FrequencyAnalyzer = (function() {
             };
         }
         
-        // Extract words from text
         const words = text.match(/\b\w+\b/g) || [];
         
-        // Use Set for tracking unique words
         const uniqueWords = new Set();
         
-        // Use Map for frequency counting (key-value pairs)
         const frequencyMap = new Map();
         
         let totalProcessedWords = 0;
         
-        // Process each word
         words.forEach(word => {
-            // Normalize word
             let processedWord = caseSensitive ? word : word.toLowerCase();
             
-            // Apply filters
             if (processedWord.length < minLength) return;
             if (excludeStopWords && config.stopWords.has(processedWord)) return;
             
-            // Add to unique words Set
             uniqueWords.add(processedWord);
             
-            // Update frequency in Map
             const currentCount = frequencyMap.get(processedWord) || 0;
             frequencyMap.set(processedWord, currentCount + 1);
             
             totalProcessedWords++;
         });
         
-        // Sort and get top words using spread operator and array methods
         const topWords = sortByFrequency(frequencyMap, maxResults);
         
-        // Calculate additional statistics
         const statistics = calculateFrequencyStatistics(frequencyMap, totalProcessedWords);
         
         return {
@@ -107,23 +85,19 @@ const FrequencyAnalyzer = (function() {
      * @returns {array} Sorted array of word-frequency pairs
      */
     const sortByFrequency = function(frequencyMap, limit) {
-        // Convert Map to array using spread operator
         const frequencyArray = [...frequencyMap.entries()];
         
-        // Sort array by frequency (descending)
         frequencyArray.sort((a, b) => b[1] - a[1]);
         
-        // Limit results and format
         const topWords = [];
         const maxLimit = Math.min(limit, frequencyArray.length);
         
-        // Use forEach to build result array
         frequencyArray.slice(0, maxLimit).forEach(([word, count], index) => {
             topWords.push({
                 rank: index + 1,
                 word: word,
                 count: count,
-                percentage: 0 // Will be calculated later
+                percentage: 0 
             });
         });
         
@@ -150,21 +124,17 @@ const FrequencyAnalyzer = (function() {
             };
         }
         
-        // Calculate mean
         const sum = frequencies.reduce((acc, freq) => acc + freq, 0);
         const mean = sum / frequencies.length;
         
-        // Calculate median
         const sortedFreqs = [...frequencies].sort((a, b) => a - b);
         const middle = Math.floor(sortedFreqs.length / 2);
         const median = sortedFreqs.length % 2 === 0
             ? (sortedFreqs[middle - 1] + sortedFreqs[middle]) / 2
             : sortedFreqs[middle];
         
-        // Calculate mode
         const mode = Math.max(...frequencies);
         
-        // Calculate range
         const range = {
             min: Math.min(...frequencies),
             max: Math.max(...frequencies)
@@ -232,17 +202,14 @@ const FrequencyAnalyzer = (function() {
         
         const words = text.toLowerCase().match(/\b\w+\b/g) || [];
         
-        // Use Map for n-gram frequency
         const ngramMap = new Map();
         
-        // Generate n-grams
         for (let i = 0; i <= words.length - n; i++) {
             const ngram = words.slice(i, i + n).join(' ');
             const count = ngramMap.get(ngram) || 0;
             ngramMap.set(ngram, count + 1);
         }
         
-        // Sort and get top n-grams using spread operator
         const topNGrams = [...ngramMap.entries()]
             .sort((a, b) => b[1] - a[1])
             .slice(0, topCount)
@@ -268,22 +235,18 @@ const FrequencyAnalyzer = (function() {
      * @returns {object} Merged analysis
      */
     const mergeAnalyses = function(...analyses) {
-        // Use spread operator to collect all analyses
         const mergedFrequencyMap = new Map();
         const mergedUniqueWords = new Set();
         let totalWords = 0;
         
-        // Process each analysis
         analyses.forEach(analysis => {
             if (!analysis || !analysis.frequencyMap) return;
             
-            // Merge frequency maps using spread operator
             [...analysis.frequencyMap.entries()].forEach(([word, count]) => {
                 const currentCount = mergedFrequencyMap.get(word) || 0;
                 mergedFrequencyMap.set(word, currentCount + count);
             });
             
-            // Merge unique words using spread operator
             [...analysis.uniqueWords].forEach(word => {
                 mergedUniqueWords.add(word);
             });
@@ -291,7 +254,6 @@ const FrequencyAnalyzer = (function() {
             totalWords += analysis.totalWords;
         });
         
-        // Sort merged results
         const topWords = sortByFrequency(mergedFrequencyMap, config.maxResults);
         
         return {
@@ -322,7 +284,6 @@ const FrequencyAnalyzer = (function() {
             };
         }
         
-        // Find common words using Set operations
         const words1 = analysis1.uniqueWords;
         const words2 = analysis2.uniqueWords;
         
@@ -330,7 +291,6 @@ const FrequencyAnalyzer = (function() {
         const uniqueToFirst = new Set([...words1].filter(word => !words2.has(word)));
         const uniqueToSecond = new Set([...words2].filter(word => !words1.has(word)));
         
-        // Calculate frequency differences for common words
         const frequencyDifferences = new Map();
         
         commonWords.forEach(word => {
@@ -346,7 +306,6 @@ const FrequencyAnalyzer = (function() {
             });
         });
         
-        // Calculate similarity metrics
         const jaccardSimilarity = calculateJaccardSimilarity(words1, words2);
         const overlapCoefficient = calculateOverlapCoefficient(words1, words2);
         
@@ -413,9 +372,7 @@ const FrequencyAnalyzer = (function() {
         const charMap = new Map();
         const uniqueChars = new Set();
         
-        // Count character frequencies using for...of loop
         for (const char of processedText) {
-            // Skip whitespace
             if (/\s/.test(char)) continue;
             
             uniqueChars.add(char);
@@ -423,7 +380,6 @@ const FrequencyAnalyzer = (function() {
             charMap.set(char, count + 1);
         }
         
-        // Sort characters by frequency
         const sortedChars = [...charMap.entries()]
             .sort((a, b) => b[1] - a[1])
             .map(([char, count], index) => ({
@@ -458,14 +414,11 @@ const FrequencyAnalyzer = (function() {
             insights: []
         };
         
-        // Use for...in loop to iterate through object properties
         for (const property in frequencyData) {
-            // Skip inherited properties
             if (!frequencyData.hasOwnProperty(property)) continue;
             
             const value = frequencyData[property];
             
-            // Categorize based on property type
             if (typeof value === 'number') {
                 processed.categories[property] = 'numeric';
                 processed.distributions[property] = {
@@ -493,7 +446,6 @@ const FrequencyAnalyzer = (function() {
             } else if (typeof value === 'object' && value !== null) {
                 processed.categories[property] = 'object';
                 
-                // Count properties using for...in
                 let propCount = 0;
                 for (const prop in value) {
                     if (value.hasOwnProperty(prop)) propCount++;
@@ -505,7 +457,6 @@ const FrequencyAnalyzer = (function() {
             }
         }
         
-        // Generate insights
         if (frequencyData.diversity && frequencyData.diversity.ttr < 0.3) {
             processed.insights.push('Low vocabulary diversity - text may be repetitive');
         }
@@ -529,10 +480,8 @@ const FrequencyAnalyzer = (function() {
      * @returns {array} Sorted results
      */
     const customSort = function(frequencyMap, sortBy = 'frequency', order = 'desc') {
-        // Convert Map to array using spread operator
         const entries = [...frequencyMap.entries()];
         
-        // Define sorting algorithms
         const sortingAlgorithms = {
             frequency: (a, b) => order === 'desc' ? b[1] - a[1] : a[1] - b[1],
             alphabetical: (a, b) => order === 'desc' 
@@ -543,11 +492,9 @@ const FrequencyAnalyzer = (function() {
                 : a[0].length - b[0].length
         };
         
-        // Apply sorting algorithm
         const sortFn = sortingAlgorithms[sortBy] || sortingAlgorithms.frequency;
         entries.sort(sortFn);
         
-        // Format results using forEach
         const results = [];
         entries.forEach(([word, count], index) => {
             results.push({
@@ -579,15 +526,11 @@ const FrequencyAnalyzer = (function() {
         
         const filtered = new Map();
         
-        // Use forEach to filter entries
         frequencyMap.forEach((count, word) => {
-            // Apply frequency filters
             if (count < minFrequency || count > maxFrequency) return;
             
-            // Apply length filters
             if (word.length < minLength || word.length > maxLength) return;
             
-            // Apply pattern filter
             if (pattern && !pattern.test(word)) return;
             
             filtered.set(word, count);
@@ -596,29 +539,23 @@ const FrequencyAnalyzer = (function() {
         return filtered;
     };
     
-    // Public API
     return {
-        // Core analysis methods
         analyzeWordFrequency,
         analyzeNGrams,
         analyzeCharacterFrequency,
         
-        // Comparison and merging
         mergeAnalyses,
         compareAnalyses,
         
-        // Processing and sorting
         processFrequencyData,
         customSort,
         filterResults,
         sortByFrequency,
         
-        // Utility methods
         calculateLexicalDiversity,
         calculateJaccardSimilarity,
         calculateOverlapCoefficient,
         
-        // Configuration
         getConfig: () => ({ ...config }),
         setStopWords: (words) => {
             config.stopWords = new Set(words);
@@ -633,10 +570,8 @@ const FrequencyAnalyzer = (function() {
     
 })();
 
-// Make available globally
 window.FrequencyAnalyzer = FrequencyAnalyzer;
 
-// Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = FrequencyAnalyzer;
 }

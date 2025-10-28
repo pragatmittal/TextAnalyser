@@ -1,8 +1,4 @@
-/**
- * UI Management Module
- * Handles user interface updates and interactions
- * Uses function expressions and arrow functions for event handling
- */
+
 
 const ui = (function() {
     'use strict';

@@ -1,13 +1,3 @@
-/**
- * Readability Analyzer Module
-    * Provides advanced readability analysis using various established formulas 
- * Technical Focus:
- * - Constructor functions for ReadabilityAnalyzer class
- * - Class-based approach for analysis modules
- * - Private methods for internal calculations
- * - Getter/setter methods for score properties
- * - Mathematical formulas with method chaining patterns
- */
 
 /**
  * ReadabilityAnalyzer Constructor Function
@@ -23,7 +13,6 @@ function ReadabilityAnalyzer(text, options = {}) {
         throw new TypeError('Text must be a string');
     }
     
-    // Private properties using closure
     let _text = text;
     let _scores = null;
     let _metrics = null;
@@ -37,11 +26,9 @@ function ReadabilityAnalyzer(text, options = {}) {
         ...options
     };
     
-    // Store instance properties
     this.analyzedAt = new Date().toISOString();
     this.version = '1.0.0';
     
-    // Private methods for internal calculations
     
     /**
      * Calculate word count (private method)

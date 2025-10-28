@@ -1,20 +1,6 @@
-/**
- * Advanced Text Parser Module
- * Day 5: Advanced Text Parsing - Sentence & Paragraph Analysis
- * 
- * Technical Focus:
- * - Generator functions for efficient sentence parsing
- * - forEach loops for paragraph detection
- * - map method for text tokenization
- * - Object.entries() for processing text statistics
- * - for loops with pattern matching for syllable counting
- */
-
 const AdvancedTextParser = (function() {
     'use strict';
-    
-    // Private configuration using object literal
-    const parserConfig = {
+        const parserConfig = {
         sentenceEndings: ['.', '!', '?', '...'],
         abbreviations: ['Mr.', 'Mrs.', 'Dr.', 'Prof.', 'Sr.', 'Jr.', 'vs.', 'etc.', 'e.g.', 'i.e.'],
         paragraphSeparator: /\n\s*\n/,
@@ -46,7 +32,6 @@ const AdvancedTextParser = (function() {
             return;
         }
         
-        // Replace abbreviations temporarily to avoid false sentence breaks
         let processedText = text;
         const abbreviationMap = new Map();
         
@@ -56,7 +41,6 @@ const AdvancedTextParser = (function() {
             processedText = processedText.replace(new RegExp(abbr.replace('.', '\\.'), 'g'), placeholder);
         });
         
-        // Split by sentence endings
         const sentenceRegex = /([^.!?]+[.!?]+)/g;
         const matches = processedText.match(sentenceRegex) || [];
         
@@ -67,19 +51,15 @@ const AdvancedTextParser = (function() {
         for (const match of matches) {
             let sentence = match.trim();
             
-            // Restore abbreviations
             for (const [placeholder, abbr] of abbreviationMap) {
                 sentence = sentence.replace(new RegExp(placeholder, 'g'), abbr);
             }
             
-            // Skip empty sentences
             if (!sentence) continue;
             
-            // Extract sentence metadata
             const words = sentence.match(parserConfig.tokenPatterns.word) || [];
             const punctuation = sentence.match(parserConfig.tokenPatterns.punctuation) || [];
             
-            // Yield sentence object with metadata
             yield {
                 text: sentence,
                 index: sentenceIndex++,
@@ -130,26 +110,22 @@ const AdvancedTextParser = (function() {
     const calculateSentenceComplexity = (sentence, wordCount) => {
         let complexity = 0;
         
-        // Length-based complexity
         if (wordCount > 25) complexity += 0.3;
         else if (wordCount > 15) complexity += 0.2;
         else if (wordCount > 10) complexity += 0.1;
         
-        // Punctuation-based complexity
         const commas = (sentence.match(/,/g) || []).length;
         const semicolons = (sentence.match(/;/g) || []).length;
         const colons = (sentence.match(/:/g) || []).length;
         
         complexity += (commas * 0.05) + (semicolons * 0.1) + (colons * 0.1);
         
-        // Subordinate clause indicators
         const subordinators = ['because', 'although', 'while', 'since', 'unless', 'if'];
         const hasSubordinator = subordinators.some(word => 
             new RegExp(`\\b${word}\\b`, 'i').test(sentence)
         );
         if (hasSubordinator) complexity += 0.15;
         
-        // Normalize to 0-1 scale
         return Math.min(complexity, 1);
     };
     
@@ -169,14 +145,11 @@ const AdvancedTextParser = (function() {
         const paragraphs = [];
         const rawParagraphs = text.split(parserConfig.paragraphSeparator);
         
-        // Use forEach loop to process each paragraph
         rawParagraphs.forEach((paragraphText, index) => {
             const trimmed = paragraphText.trim();
             
-            // Skip empty paragraphs
             if (!trimmed) return;
             
-            // Parse sentences in this paragraph
             const paragraphSentences = [];
             const sentenceGen = sentenceParser(trimmed);
             
@@ -184,13 +157,11 @@ const AdvancedTextParser = (function() {
                 paragraphSentences.push(sentence);
             }
             
-            // Calculate paragraph statistics
             const wordCount = paragraphSentences.reduce((sum, sent) => sum + sent.wordCount, 0);
             const avgWordsPerSentence = paragraphSentences.length > 0 
                 ? wordCount / paragraphSentences.length 
                 : 0;
             
-            // Create paragraph object
             const paragraphObj = {
                 text: trimmed,
                 index: index,
@@ -204,7 +175,6 @@ const AdvancedTextParser = (function() {
             
             paragraphs.push(paragraphObj);
             
-            // Execute callback if provided
             if (callback && typeof callback === 'function') {
                 callback(paragraphObj, index);
             }
@@ -257,7 +227,6 @@ const AdvancedTextParser = (function() {
         // Extract different token types
         const words = (text.match(parserConfig.tokenPatterns.word) || [])
             .map(word => {
-                // Apply transformations using map method
                 let transformed = word;
                 
                 if (lowercase) {
@@ -350,7 +319,6 @@ const AdvancedTextParser = (function() {
      * @returns {string} Stemmed word
      */
     const applyStemming = (word) => {
-        // Simple suffix removal (basic Porter stemmer logic)
         const suffixes = ['ing', 'ed', 'ly', 'es', 's', 'er', 'est'];
         
         for (const suffix of suffixes) {
@@ -389,14 +357,11 @@ const AdvancedTextParser = (function() {
         // Process statistics using Object.entries()
         const processedStats = {};
         
-        // Use Object.entries() to iterate and calculate derived statistics
         Object.entries(rawStats).forEach(([key, value]) => {
             processedStats[key] = value;
             
-            // Add formatted version
             processedStats[`${key}Formatted`] = value.toLocaleString();
             
-            // Calculate percentages for certain metrics
             if (key === 'characterCountNoSpaces' && rawStats.characterCount > 0) {
                 processedStats.textDensity = Utils.math.round(
                     (value / rawStats.characterCount) * 100,
@@ -476,12 +441,10 @@ const AdvancedTextParser = (function() {
         let previousWasVowel = false;
         const vowels = 'aeiouy';
         
-        // Use for loop to iterate through characters for syllable counting
         for (let i = 0; i < cleanWord.length; i++) {
             const char = cleanWord[i];
             const isVowel = vowels.includes(char);
             
-            // Count syllable when transitioning from consonant to vowel
             if (isVowel && !previousWasVowel) {
                 syllableCount++;
             }
@@ -538,7 +501,6 @@ const AdvancedTextParser = (function() {
         const wordSyllables = [];
         let totalSyllables = 0;
         
-        // Use for loop to count syllables for each word
         for (let i = 0; i < words.length; i++) {
             const word = words[i];
             const syllables = countSyllables(word);
@@ -622,30 +584,21 @@ const AdvancedTextParser = (function() {
     
     // Public API
     return {
-        // Generator function for sentence parsing
         sentenceParser: sentenceParser,
         parseSentences: (text) => Array.from(sentenceParser(text)),
-        
-        // Paragraph detection with forEach
         detectParagraphs: detectParagraphs,
         
-        // Text tokenization with map
         tokenizeText: tokenizeText,
         
-        // Statistics processing with Object.entries()
         processTextStatistics: processTextStatistics,
         
-        // Syllable counting with for loops
         countSyllables: countSyllables,
         countTextSyllables: countTextSyllables,
         
-        // Comprehensive parsing
         parseText: parseText,
         
-        // Utility methods
         getConfig: () => ({ ...parserConfig }),
         
-        // Helper methods
         determineSentenceType: determineSentenceType,
         calculateSentenceComplexity: calculateSentenceComplexity,
         calculateParagraphComplexity: calculateParagraphComplexity
@@ -653,12 +606,10 @@ const AdvancedTextParser = (function() {
     
 })();
 
-// Make available globally
 window.AdvancedTextParser = AdvancedTextParser;
 
-// Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = AdvancedTextParser;
 }
 
-console.log('📊 Advanced Text Parser module loaded successfully');
+console.log(' Advanced Text Parser module loaded successfully');

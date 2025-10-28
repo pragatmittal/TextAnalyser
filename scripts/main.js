@@ -1,44 +1,28 @@
-/**
- * Main Application Module
- * Initializes and coordinates all components of the Text Analyzer application
- * Uses function expressions and arrow functions for initialization
- */
 
-// Main application object using object literal
 const TextAnalyzerApp = {
     
-    // Application state
     isInitialized: false,
     components: {},
     preferences: null,
     cache: null,
     
-    /**
-     * Initialize all application components using function expression
-     */
+ 
     initialize: function() {
         console.log('Initializing Text Analyzer Application...');
         
         try {
-            // Initialize storage systems (Day 9)
             this.initializeStorage();
             
-            // Initialize components in dependency order
             this.initializeComponents();
             
-            // Initialize advanced features (Day 11)
             this.initializeAdvancedFeatures();
             
-            // Set up global error handling
             this.setupErrorHandling();
             
-            // Set up keyboard shortcuts
             this.setupKeyboardShortcuts();
             
-            // Load user preferences
             this.loadPreferences();
             
-            // Mark as initialized
             this.isInitialized = true;
             
             console.log('Text Analyzer Application initialized successfully');
@@ -52,88 +36,69 @@ const TextAnalyzerApp = {
         }
     },
     
-    /**
-     * Initialize storage systems
-     */
+    
     initializeStorage: function() {
         this.preferences = new PreferencesManager();
         this.cache = new CacheManager();
         
-        console.log('✅ Storage systems initialized');
+        console.log(' Storage systems initialized');
     },
     
-    /**
-     * Initialize all components using arrow function
-     */
     initializeComponents: () => {
-        // Initialize UI components
         if (window.ui && typeof window.ui.initialize === 'function') {
             window.ui.initialize();
             TextAnalyzerApp.components.ui = window.ui;
         }
         
-        // Initialize input processor
         if (window.inputProcessor && typeof window.inputProcessor.initialize === 'function') {
             window.inputProcessor.initialize();
             TextAnalyzerApp.components.inputProcessor = window.inputProcessor;
         }
         
-        // Initialize debounced analyzer
         if (window.debouncedAnalyzer && typeof window.debouncedAnalyzer.initialize === 'function') {
             window.debouncedAnalyzer.initialize();
             TextAnalyzerApp.components.debouncedAnalyzer = window.debouncedAnalyzer;
         }
         
-        // Initialize main analyzer
         if (window.analyzer && typeof window.analyzer.initialize === 'function') {
             window.analyzer.initialize();
             TextAnalyzerApp.components.analyzer = window.analyzer;
         }
         
-        console.log('✅ Core components initialized');
+        console.log(' Core components initialized');
     },
     
-    /**
-     * Initialize advanced features
-     */
+   
     initializeAdvancedFeatures: function() {
-        // Add export button functionality
         const exportBtn = document.getElementById('export-btn');
         if (exportBtn) {
             exportBtn.addEventListener('click', () => this.exportAnalysis());
         }
         
-        // Add settings functionality
         const settingsBtn = document.getElementById('settings-btn');
         if (settingsBtn) {
             settingsBtn.addEventListener('click', () => this.showSettings());
         }
         
-        console.log('✅ Advanced features initialized');
+        console.log(' Advanced features initialized');
     },
     
-    /**
-     * Load user preferences
-     */
+   
     loadPreferences: function() {
         const prefs = this.preferences.getAllPreferences();
         
-        // Apply theme
         if (prefs.theme) {
             document.body.setAttribute('data-theme', prefs.theme);
         }
         
-        // Apply font size
         if (prefs.fontSize) {
             document.documentElement.style.setProperty('--base-font-size', `${prefs.fontSize}px`);
         }
         
-        console.log('✅ User preferences loaded:', prefs);
+        console.log(' User preferences loaded:', prefs);
     },
     
-    /**
-     * Export current analysis
-     */
+   
     exportAnalysis: async function() {
         const textarea = document.getElementById('text-input');
         if (!textarea || !textarea.value.trim()) {
@@ -142,20 +107,15 @@ const TextAnalyzerApp = {
         }
         
         try {
-            // Get complete analysis
             const analysis = TextAnalyzerAPI.analyze(textarea.value);
             
-            // Create exporter
             const exporter = new ExportManager({ format: 'json', prettify: true });
             
-            // Export to JSON
             const jsonData = exporter.toJSON(analysis);
             
-            // Download file
             const filename = `text-analysis-${Date.now()}.json`;
             exporter.downloadFile(jsonData, filename, 'application/json');
             
-            // Also copy to clipboard
             const copied = await exporter.copyToClipboard(jsonData);
             
             if (copied) {
@@ -170,9 +130,7 @@ const TextAnalyzerApp = {
         }
     },
     
-    /**
-     * Show settings modal
-     */
+  
     showSettings: function() {
         const prefs = this.preferences.getAllPreferences();
         
@@ -205,12 +163,10 @@ const TextAnalyzerApp = {
             </div>
         `;
         
-        // Add to body
         const modalContainer = document.createElement('div');
         modalContainer.innerHTML = settingsHTML;
         document.body.appendChild(modalContainer);
         
-        // Setup event listeners
         document.getElementById('save-settings-btn').addEventListener('click', () => {
             this.saveSettings();
             modalContainer.remove();
@@ -221,9 +177,6 @@ const TextAnalyzerApp = {
         });
     },
     
-    /**
-     * Save settings
-     */
     saveSettings: function() {
         const theme = document.getElementById('theme-select').value;
         const fontSize = parseInt(document.getElementById('font-size-input').value);
@@ -315,7 +268,6 @@ const TextAnalyzerApp = {
             this.components.analyzer.clearHistory();
         }
         
-        // Clear text input
         const textInput = document.getElementById('text-input');
         if (textInput) {
             textInput.value = '';
@@ -338,29 +290,23 @@ const TextAnalyzerApp = {
     }
 };
 
-// Application startup using anonymous function
 (function() {
     'use strict';
     
-    // Wait for DOM to be ready
     const initializeApp = () => {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeApp);
             return;
         }
         
-        // Initialize the application
         TextAnalyzerApp.initialize();
     };
     
-    // Start initialization
     initializeApp();
     
-    // Make app globally available for debugging
     window.TextAnalyzerApp = TextAnalyzerApp;
 })();
 
-// Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = TextAnalyzerApp;
 }
